@@ -4,5 +4,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/Users/tobiasb/Sites/java/libs/core.jar"/>
+	<classpathentry kind="lib" path="/Users/tobiasb/Sites/java/libs/serial.jar"/>
+	<classpathentry kind="lib" path="/Users/tobiasb/Sites/java/libs/RXTXcomm.jar"/>
 	<classpathentry kind="output" path="resources/code"/>
 </classpath>

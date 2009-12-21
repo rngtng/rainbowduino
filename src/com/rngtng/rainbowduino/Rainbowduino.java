@@ -21,9 +21,13 @@ Boston, MA  02111-1307  USA
 
 package com.rngtng.rainbowduino;
 
+import java.io.IOException;
 import java.util.Vector;
 
 import processing.core.PApplet;
+import processing.serial.Serial;
+
+import gnu.io.*;
 
 /**
  * 
@@ -34,12 +38,10 @@ import processing.core.PApplet;
  */
 public class Rainbowduino {
 	
-	PApplet app;
-
 	public static int width = 8;
 	public static int height = width;
 
-	public final String VERSION = "0.2";
+	public final String VERSION = "0.1";
 
 //	Vector<LaunchpadListener> listeners;
 
@@ -52,7 +54,9 @@ public class Rainbowduino {
 	 * @param _app parent Applet
 	 */
 	public Rainbowduino(PApplet _app) {
-		app = _app;
+		//super(_app);
+        port.addEventListener(this);
+        port.notifyOnDataAvailable(true);
 		
 //		listeners = new Vector<LaunchpadListener>();
 	//	addListener(new LaunchadPAppletListener(_app));
@@ -102,5 +106,39 @@ public class Rainbowduino {
 		return false;
 	} */	
 
+	  synchronized public void serialEvent(SerialPortEvent serialEvent) {
+		    if (serialEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
+		      try {
+		        while (input.available() > 0) {
+		          synchronized (this.buffer) {
+		            if (bufferLast == buffer.length) {
+		              byte temp[] = new byte[bufferLast << 1];
+		              System.arraycopy(buffer, 0, temp, 0, bufferLast);
+		              buffer = temp;
+		            }
+		            buffer[bufferLast++] = (byte) input.read();
+		            if (serialEventMethod != null) {
+		              if ((bufferUntil &&
+		                   (buffer[bufferLast-1] == bufferUntilByte)) ||
+		                  (!bufferUntil &&
+		                   ((bufferLast - bufferIndex) >= bufferSize))) {
+		                try {
+		                  serialEventMethod.invoke(parent, new Object[] { this });
+		                } catch (Exception e) {
+		                  String msg = "error, disabling serialEvent() for " + port;
+		                  System.err.println(msg);
+		                  e.printStackTrace();
+		                  serialEventMethod = null;
+		                }
+		              }
+		            }
+		          }
+		        }
+
+		      } catch (IOException e) {
+		        errorMessage("serialEvent", e);
+		      }
+		    }
+		  }
 
 }
