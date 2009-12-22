@@ -22,6 +22,8 @@ Boston, MA  02111-1307  USA
 package com.rngtng.rainbowduino;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.TooManyListenersException;
 import java.util.Vector;
 
 import processing.core.PApplet;
@@ -36,15 +38,33 @@ import gnu.io.*;
  * @author rngtng - Tobias Bielohlawek
  *
  */
-public class Rainbowduino {
+public class Rainbowduino  { //implements SerialPortEventListener
+
+	PApplet app;
+	int CRTL  = 255;
+	int RESET = 255;
+
+	int PING = 254;
+	int HELLO = 254;
+
+	int WRITE_FRAME  = 253;
+	int WRITE_EEPROM = 252;
+	int READ_EEPROM  = 251;
+
+	int SPEED = 249;
+	int SPEED_INC = 128; //B1000 0000
+	int SPEED_DEC = 1;   //B0000 0001
+
+	int baud = 9600;
 	
+	Serial port;
+	String port_name;	
+
 	public static int width = 8;
 	public static int height = width;
 
 	public final String VERSION = "0.1";
-
-//	Vector<LaunchpadListener> listeners;
-
+	
 
 	/**
 	 * a Constructor, usually called in the setup() method in your sketch to
@@ -54,15 +74,12 @@ public class Rainbowduino {
 	 * @param _app parent Applet
 	 */
 	public Rainbowduino(PApplet _app) {
-		//super(_app);
-        port.addEventListener(this);
-        port.notifyOnDataAvailable(true);
-		
-//		listeners = new Vector<LaunchpadListener>();
-	//	addListener(new LaunchadPAppletListener(_app));
+		this.app = _app;
+		app.registerDispose(this);
 	}
 
 	public void dispose() {
+		port.stop();
 	}
 
 	/**
@@ -74,71 +91,95 @@ public class Rainbowduino {
 		return VERSION;
 	}
 
-	/* -- Listener Handling -- */
-
-	/**
-	 * 	Adds a listener who will be notified each time a new MIDI message is received from a MIDI input device. If the listener has already been added, it will not be added again.
-	 *
-	 * @param listener the listener to add.
-	 * @return true if and only the listener was successfully added.
-	 * @see #removeListener(LaunchpadListener listener)
-	 */
-	/* public boolean addListener(LaunchpadListener listener) {
-		for(LaunchpadListener current : listeners) if(current == listener) return false;	
-		listeners.add(listener);				
-		return true;
-	} */
-
-	/**
-	 * Removes a given listener.
-	 *
-	 * @param listener the listener to remove.
-	 * @return true if and only the listener was successfully removed.
-	 * @see #addListener(LaunchpadListener listener)
-	 */
-/*	public boolean removeListener(LaunchpadListener listener) {
-		for(LaunchpadListener current : listeners) {
-			if(current == listener) {
-				listeners.remove(listener);
-				return true;
-			}
+	public void init(String port_name, int _baud) {
+		this.baud = _baud;
+		init_port(port_name);
+		String[] ports = Serial.list();
+		for(int i = 0; port == null && i < ports.length; i++) {
+			if( PApplet.match(ports[i], "tty") == null) continue;
+			init_port(ports[i]);
 		}
+		 /* if(port != null) {
+			try {
+				port.port.addEventListener(this);
+			} catch (TooManyListenersException e) { 
+				e.printStackTrace();
+			}
+			port.port.notifyOnDataAvailable(true);
+		} */
+	}
+
+	public boolean init_port(String port_name) {
+		if(port_name == null) return false;
+		port = new Serial(app, port_name, this.baud);
+		port.buffer(0);
+		try {
+			if(wait_and_read_serial(20) == 252) {
+				command(PING);
+				if(wait_and_read_serial(20) == HELLO) return true;         
+				port.stop();
+			}
+		} catch (Exception e) {
+			PApplet.println("Failed");
+			e.printStackTrace();
+		}
+		PApplet.println("No response");        			
+		if(port != null) port.stop();
+		port = null;
 		return false;
-	} */	
+	}
+	
+	/* +++++++++++++++++++ */
 
-	  synchronized public void serialEvent(SerialPortEvent serialEvent) {
-		    if (serialEvent.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
-		      try {
-		        while (input.available() > 0) {
-		          synchronized (this.buffer) {
-		            if (bufferLast == buffer.length) {
-		              byte temp[] = new byte[bufferLast << 1];
-		              System.arraycopy(buffer, 0, temp, 0, bufferLast);
-		              buffer = temp;
-		            }
-		            buffer[bufferLast++] = (byte) input.read();
-		            if (serialEventMethod != null) {
-		              if ((bufferUntil &&
-		                   (buffer[bufferLast-1] == bufferUntilByte)) ||
-		                  (!bufferUntil &&
-		                   ((bufferLast - bufferIndex) >= bufferSize))) {
-		                try {
-		                  serialEventMethod.invoke(parent, new Object[] { this });
-		                } catch (Exception e) {
-		                  String msg = "error, disabling serialEvent() for " + port;
-		                  System.err.println(msg);
-		                  e.printStackTrace();
-		                  serialEventMethod = null;
-		                }
-		              }
-		            }
-		          }
-		        }
+	private void command( int command ) {
+		send(CRTL);
+		send(command);
+	}
 
-		      } catch (IOException e) {
-		        errorMessage("serialEvent", e);
-		      }
-		    }
-		  }
+	private void send_row(byte[] row) {
+		for(int i = 0; i < row.length; i++) {
+			send(row[i]);
+		}
+	}
+
+	private int wait_and_read_serial() {
+		try {
+			return wait_and_read_serial(50);
+		}
+		catch( Exception e) {  
+			PApplet.println("Matrix Timeout");
+			return 0;
+		}
+	}
+
+	private int wait_and_read_serial(int timeout) throws Exception {
+		//what if port is NULL??
+		while( timeout > 0 && port.available() < 1) {
+			//print(".");
+			sleep(100);
+			timeout--;
+			if(timeout == 0) throw new Exception();
+		}
+		return port.read();
+	}
+
+	private void send(int value) {
+		if(port == null ) return;
+		port.write(value);
+	}
+	
+	private void sleep(int ms) {
+		try {
+			Thread.sleep(ms);
+		}
+		catch(InterruptedException e) {
+		}
+	}
+
+	/*
+	synchronized public void serialEvent(SerialPortEvent serialEvent) {
+		buffer.add(port.read());
+	}
+	*/
 
 }
