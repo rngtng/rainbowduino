@@ -53,6 +53,10 @@ void Rainbowduino::set_frame_nr(byte frame_nr) {
   if(frame_nr < num_frames) current_frame_nr = frame_nr;
 }
 
+byte Rainbowduino::get_frame_nr() {
+  return current_frame_nr;
+}
+
 void Rainbowduino::set_frame_row(byte frame_nr, byte row, byte data) {
   if(frame_nr > num_frames) return;
   word offset = frame_nr * num_rows;

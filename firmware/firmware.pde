@@ -28,9 +28,15 @@
 #define COMMAND     255
 
 /* command code */
-#define RESET       254 //returns OK + Version number
 #define API_VERSION 253 //returns OK + Version number	
 #define PING        252 //returns OK + Version number
+
+/* Display Control */
+#define RESET       254 //returns OK + current frame (which should be 0)
+#define START       218 //returns OK + current frame
+#define STOP        216 //returns OK + current frame
+#define FRAME_GET   214 //returns OK + current frame
+#define FRAME_SET   212 //returns OK + current frame
 
 /* Buffer Control */
 //XY
@@ -123,11 +129,23 @@ void check_serial() {
     case API_VERSION:
       ok(API_VERSION_NR);
       break;
+      
+      
     case RESET:
       load_from_eeprom(0);
       reset();
-      ok(API_VERSION_NR);
+      ok(rainbow.get_frame_nr());
       break;
+
+      
+    case FRAME_SET:
+      rainbow.set_frame_nr( wait_and_read_serial() );
+      ok(rainbow.get_frame_nr());
+      break;
+    case FRAME_GET:
+      ok(rainbow.get_frame_nr());
+      break;
+
 
       /* Buffer Control */
     case BUFFER_SET_AT:

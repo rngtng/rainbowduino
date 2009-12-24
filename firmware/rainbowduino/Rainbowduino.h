@@ -63,6 +63,7 @@ public:
 
   void next_frame();
   void set_frame_nr(byte frame_nr);
+  byte get_frame_nr();
 
   void draw(byte level = 12);
 
