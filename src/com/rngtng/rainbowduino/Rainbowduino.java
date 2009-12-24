@@ -56,7 +56,7 @@ public class Rainbowduino  { //implements SerialPortEventListener
 	int SPEED_DEC = 1;   //B0000 0001
 
 	int baud = 9600;
-	
+
 	Serial port;
 	String port_name;	
 
@@ -64,7 +64,7 @@ public class Rainbowduino  { //implements SerialPortEventListener
 	public static int height = width;
 
 	public final String VERSION = "0.1";
-	
+
 
 	/**
 	 * a Constructor, usually called in the setup() method in your sketch to
@@ -93,13 +93,13 @@ public class Rainbowduino  { //implements SerialPortEventListener
 
 	public void init(String port_name, int _baud) {
 		this.baud = _baud;
-		init_port(port_name);
+		openPort(port_name);
 		String[] ports = Serial.list();
 		for(int i = 0; port == null && i < ports.length; i++) {
 			if( PApplet.match(ports[i], "tty") == null) continue;
-			init_port(ports[i]);
+			openPort(ports[i]);
 		}
-		 /* if(port != null) {
+		/* if(port != null) {
 			try {
 				port.port.addEventListener(this);
 			} catch (TooManyListenersException e) { 
@@ -109,7 +109,7 @@ public class Rainbowduino  { //implements SerialPortEventListener
 		} */
 	}
 
-	public boolean init_port(String port_name) {
+	private boolean openPort(String port_name) {
 		if(port_name == null) return false;
 		port = new Serial(app, port_name, this.baud);
 		port.buffer(0);
@@ -128,9 +128,22 @@ public class Rainbowduino  { //implements SerialPortEventListener
 		port = null;
 		return false;
 	}
-	
-	/* +++++++++++++++++++ */
 
+	/* +++++++++++++++++++ */
+	public void speedUp() {	   
+		command(SPEED);
+		send(SPEED_INC);
+	}
+
+	public void speedDown() {	   
+		command(SPEED);
+		send(SPEED_DEC);
+	}
+
+	public void reset() {	   
+		command(RESET);		
+	}
+	
 	private void command( int command ) {
 		send(CRTL);
 		send(command);
@@ -141,6 +154,13 @@ public class Rainbowduino  { //implements SerialPortEventListener
 			send(row[i]);
 		}
 	}
+
+	private void send(int value) {
+		if(port == null ) return;
+		port.write(value);
+	}
+
+	/* +++++++++++++++++++ */
 
 	private int wait_and_read_serial() {
 		try {
@@ -163,11 +183,6 @@ public class Rainbowduino  { //implements SerialPortEventListener
 		return port.read();
 	}
 
-	private void send(int value) {
-		if(port == null ) return;
-		port.write(value);
-	}
-	
 	private void sleep(int ms) {
 		try {
 			Thread.sleep(ms);
@@ -180,6 +195,6 @@ public class Rainbowduino  { //implements SerialPortEventListener
 	synchronized public void serialEvent(SerialPortEvent serialEvent) {
 		buffer.add(port.read());
 	}
-	*/
+	 */
 
 }
