@@ -7,11 +7,17 @@ public interface RCodes {
 	/* init code */
 	public final static int COMMAND     = 255;
 
-	/* command code */
-	public final static int RESET       = 254; //returns OK + Version number
+	/* command code */	
 	public final static int API_VERSION = 253; //returns OK + Version number	
 	public final static int PING        = 252; //returns OK + Version number
 
+	/* Display Control */
+	public final static int RESET       = 254; //returns OK + current frame (which should be 0)
+	public final static int START       = 218; //returns OK + current frame
+	public final static int STOP        = 216; //returns OK + current frame
+	public final static int _GET   = 214; //returns OK + current frame
+	public final static int FRAME_SET   = 212; //returns OK + current frame
+	
 	/* Buffer Control */
 	//XY
 	//Y
@@ -23,9 +29,9 @@ public interface RCodes {
 	
 	public final static int BUFFER_LENGTH = 242; //returns OK + buffer length
 	
-	public final static int BUFFER_SAVE = 236; //returns OK + buffer length
+	public final static int BUFFER_SAVE   = 236; //returns OK + buffer length
 	
-	public final static int BUFFER_LOAD = 234; //returns OK + buffer length
+	public final static int BUFFER_LOAD   = 234; //returns OK + buffer length
 
 	/* Speed Control */	
 	public final static int SPEED_SET   = 228; //param1: SPEED value, returns OK + speed value

@@ -45,7 +45,6 @@ public class Rainbowduino  implements RCodes{
 
 	public final String VERSION = "0.1";
 
-
 	/**
 	 * a Constructor, usually called in the setup() method in your sketch to
 	 * initialize and start the library.
@@ -72,11 +71,11 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	public void init(String port_name, int _baud) {
-		this.baud = _baud;
+		if(_baud > 0) this.baud = _baud;
 		openPort(port_name);
 		String[] ports = Serial.list();
 		for(int i = 0; port == null && i < ports.length; i++) {
-			if( PApplet.match(ports[i], "tty") == null) continue;
+			if( PApplet.match(ports[i], "tty") == null) continue;			
 			openPort(ports[i]);
 		}
 	}
@@ -85,6 +84,11 @@ public class Rainbowduino  implements RCodes{
 		if(port_name == null) return false;
 		port = new Serial(app, port_name, this.baud);
 		port.buffer(0);		
+		try { //for some reason first byte is 252 when init Rainbowduino, so we wait for this first
+			wait_and_read_serial();
+		} catch (RainbowduinoTimeOut e) {
+			e.printStackTrace();
+		}
 		if(ping()) return true;					
 		PApplet.println("No response");        			
 		if(port != null) port.stop();
@@ -93,16 +97,6 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	/* +++++++++++++++++++ */	
-	public boolean reset() {	   
-		try {
-			command(RESET);
-			return true;
-		} catch (RainbowduinoError e) {
-			e.printStackTrace();
-		}		
-		return false;
-	}
-
 	public int api_version() {	   
 		try {
 			return command(API_VERSION);
@@ -122,6 +116,39 @@ public class Rainbowduino  implements RCodes{
 		return false;
 	}
 
+	/* +++++++++++++++++++ */	
+	
+	public boolean reset() {	   
+		try {
+			command(RESET);
+			return true;
+		} catch (RainbowduinoError e) {
+			e.printStackTrace();
+		}		
+		return false;
+	}
+
+	public boolean start() {	   
+		try {
+			command(START);
+			return true;
+		} catch (RainbowduinoError e) {
+			e.printStackTrace();
+		}		
+		return false;
+	}
+
+	public boolean stop() {	   
+		try {
+			command(STOP);
+			return true;
+		} catch (RainbowduinoError e) {
+			e.printStackTrace();
+		}		
+		return false;
+	}
+
+	
 	/* +++++++++++++++++++ */
 
 	public int bufferSetAt(int adr, byte[] content) {	   
@@ -242,6 +269,7 @@ public class Rainbowduino  implements RCodes{
 				return wait_and_read_serial();
 			}
 			else {
+				PApplet.println(response);
 				//return error code
 				throw new RainbowduinoError( wait_and_read_serial() );
 			}
@@ -285,7 +313,7 @@ public class Rainbowduino  implements RCodes{
 	class RainbowduinoError extends Exception {
 
 		public RainbowduinoError(int waitAndReadSerial) {
-			// TODO Auto-generated constructor stub
+			PApplet.println(waitAndReadSerial);
 		}
 
 
