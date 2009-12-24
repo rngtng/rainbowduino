@@ -17,7 +17,9 @@
 		<fileset dir="${libraryClasspath}" >		
 <!-- #### (3) add the jar files that are required for compiling. edit name.
 		for more include files. duplicate <include name="" /> #### -->
-			<include name="core.jar"/>			
+			<include name="core.jar"/>
+			<include name="serial.jar"/>
+			<include name="RXTXcomm.jar"/>
 		</fileset>
 	</path>		
 	
@@ -41,13 +43,13 @@
 	<property name="libraryName"  value="rainbowduino"/>
 	
 <!-- #### (8) give your library a name. edit value.   #### -->
-	<property name="versionNumber"  value="0.2"/>
+	<property name="versionNumber"  value="0.1"/>
 	
 <!-- #### (9) your contact url. edit value. #### -->
 	<property name="yourLink"  value="http://www.rngtng.com/" />
 	
 <!-- #### (10) a comma separated list of keywords describing your library. edit value. #### -->
-	<property name="keywords"  value="rainbowduino,arduino,controller,serial" />
+	<property name="keywords"  value="rainbowduino,arduino,controller,seedstudio,serial" />
 	
 <!-- #### (11) a comma separated list of platforms the library has been tested. edit value. #### -->
 	<property name="tested:platform"  value="Mac OS X" />
@@ -133,6 +135,7 @@
   	<mkdir dir="${dist}/examples" />
   	<mkdir dir="${dist}/reference" />
   	<mkdir dir="${dist}/src" />
+  	<mkdir dir="${dist}/firmware" />
   	<jar jarfile="${dist}/library/${jarFile}" basedir="${bin}"/>
   	<copy todir="${dist}/examples">
   		<fileset dir="examples"/>
@@ -140,11 +143,14 @@
   	<copy todir="${dist}/src">
   		<fileset dir="src"/>
   	</copy> 
-  	
+  	<copy todir="${dist}/firmware">
+  		<fileset dir="firmware"/>
+  	</copy> 
+  		
 	<!-- create the java reference of the library -->
  	<mkdir dir="${reference}" />
  	<javadoc bottom="processing library ${libraryName} by ${author}. ${copyright}" 
- 			 classpath="${libraryClasspath}/core.jar" 
+ 			 classpath="${libraryClasspath}/core.jar;${libraryClasspath}/serial.jar;${libraryClasspath}/RXTXcomm.jar" 
  			 destdir="${reference}" 
  			 verbose="false" 
  			 stylesheetfile="resources/stylesheet.css" 
