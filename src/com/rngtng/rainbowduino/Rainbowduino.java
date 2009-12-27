@@ -55,7 +55,7 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	public void dispose() {
-		port.stop();
+		if(connected()) port.stop();
 	}
 
 	/**
@@ -117,16 +117,16 @@ public class Rainbowduino  implements RCodes{
 	 */
 	private boolean openPort(String port_name, boolean check) {
 		if(port_name == null) return false;
-		port = new Serial(app, port_name, this.baud);
-		port.buffer(20);
-		if(!check) return true; //skip check
-		try { //for some reason first byte is 252 when init Rainbowduino, so we wait for this first
-			waitAndReadSerial(); 
-		} catch (RainbowduinoTimeOut e) {
-		}				
-		if(ping()) return true;					
-		PApplet.println("No response");        			
-		if(port != null) port.stop();
+		try {
+			port = new Serial(app, port_name, this.baud);
+			port.buffer(20);
+			sleep(300); //give it time to initialize			
+			if(!check || ping()) return true; //skip check			
+			PApplet.println("No response");			
+		}
+		catch (Exception e) {			
+		}
+		if(port != null) port.stop();        					
 		port = null;
 		return false;
 	}
@@ -139,7 +139,7 @@ public class Rainbowduino  implements RCodes{
 			sendCommand(API_VERSION);
 			return receive(API_VERSION);
 		} catch (RainbowduinoError e) {
-			e.printStackTrace();
+			e.print();
 		}		
 		return 0;
 	}
@@ -147,7 +147,7 @@ public class Rainbowduino  implements RCodes{
 	/**
 	 * 
 	 * @return wheter ping was successfull
-	 * @TODO: add time??
+	 * TODO: add time??
 	 */
 	public boolean ping() {		
 		try {
@@ -155,7 +155,7 @@ public class Rainbowduino  implements RCodes{
 			receive(PING);
 			return true;
 		} catch (RainbowduinoError e) {
-			e.printStackTrace();
+			e.print();
 		}		
 		return false;
 	}
@@ -199,7 +199,7 @@ public class Rainbowduino  implements RCodes{
 			sendCommand(FRAME_GET);
 			return receive(FRAME_GET);
 		} catch (RainbowduinoError e) {
-			e.printStackTrace();
+			e.print();
 		}		
 		return 0;
 	}
@@ -221,7 +221,7 @@ public class Rainbowduino  implements RCodes{
 			sendCommand(BRIGHTNESS_GET);
 			return receive(FRAME_GET);
 		} catch (RainbowduinoError e) {
-			e.printStackTrace();
+			e.print();
 		}		
 		return 0;
 	}	
@@ -252,7 +252,7 @@ public class Rainbowduino  implements RCodes{
 				send(content[i]);
 			}			
 		} catch (RainbowduinoError e) {			
-			e.printStackTrace();
+			e.print();
 		}		
 	}
 
@@ -276,7 +276,7 @@ public class Rainbowduino  implements RCodes{
 			}
 			return content;
 		} catch (RainbowduinoError e) {
-			e.printStackTrace();
+			e.print();
 		}	
 		return null;
 	}	
@@ -289,7 +289,7 @@ public class Rainbowduino  implements RCodes{
 			sendCommand(BUFFER_LENGTH);
 			return receive(BUFFER_LENGTH);
 		} catch (RainbowduinoError e) {
-			e.printStackTrace();
+			e.print();
 		}
 		return 0;		
 	}
@@ -309,7 +309,7 @@ public class Rainbowduino  implements RCodes{
 			sendCommand(BUFFER_LOAD);
 			return receive(BUFFER_LOAD);
 		} catch (RainbowduinoError e) {
-			e.printStackTrace();
+			e.print();
 		}
 		return 0;				
 	}		
@@ -331,7 +331,7 @@ public class Rainbowduino  implements RCodes{
 			sendCommand(SPEED_GET);
 			return receive(SPEED_GET);
 		} catch (RainbowduinoError e) {
-			e.printStackTrace();
+			e.print();
 		}
 		return 0;
 	}	
@@ -355,7 +355,7 @@ public class Rainbowduino  implements RCodes{
 		//init command			
 		send(COMMAND);
 		//flush buffer		
-		port.clear();		
+		if( connected() ) port.clear();		
 		//send command
 		send(command_code);
 	}
@@ -415,9 +415,15 @@ public class Rainbowduino  implements RCodes{
 
 	class RainbowduinoTimeOut extends Exception {}
 	class RainbowduinoError extends Exception {
-		public RainbowduinoError(int error) {
-			PApplet.println("Error happend:" + error);
+		int error;
+
+		public RainbowduinoError(int _error) {
+			this.error = _error;			
 		}
+
+		public void print() {
+			PApplet.println("Error happend: " + this.error);
+		}		
 	}
 
 }
