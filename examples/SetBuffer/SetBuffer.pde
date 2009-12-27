@@ -8,22 +8,30 @@ void setup() {
   rainbowduino.initPort();
 
   rainbowduino.stop();
-  
+  rainbowduino.reset();
+
   //Green
-  rainbowduino.bufferSetAt(0, new int[]{255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0  }  );
+  rainbowduino.bufferSetAt(0, new int[]{
+    255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0  } 
+  );
   //Blue
-  rainbowduino.bufferSetAt(1, new int[]{0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0  }  );
+  rainbowduino.bufferSetAt(1, new int[]{
+    0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0  } 
+  );
   //Red  
-  rainbowduino.bufferSetAt(2, new int[]{0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255  }  );
+  rainbowduino.bufferSetAt(2, new int[]{
+    0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255  } 
+  );
   rainbowduino.start();
 
-//  rainbowduino.bufferSave();
   println("BufferLength: " + rainbowduino.bufferLength());
+  //  rainbowduino.bufferSave();  
   noLoop();
 }
 
 void draw() {
 }
+
 
 
 
