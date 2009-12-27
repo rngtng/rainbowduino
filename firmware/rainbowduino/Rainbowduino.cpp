@@ -59,7 +59,7 @@ void Rainbowduino::next_frame() {
 
 //=== Frame Data Manipulating ==========================================================
 void Rainbowduino::set_frame(byte frame_nr, byte* data) {
-  if(frame_nr > MAX_NUM_FRAMES) return;
+  if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS;
   for(byte row = 0; row < NUM_ROWS; row++) {
     frame_buffer[offset+row] = data[row];
@@ -68,20 +68,20 @@ void Rainbowduino::set_frame(byte frame_nr, byte* data) {
 }
 
 void Rainbowduino::set_frame_row(byte frame_nr, byte row, byte data) {
-  if(frame_nr > MAX_NUM_FRAMES) return;
+  if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS;
   frame_buffer[offset+row] = data;
   if(frame_nr >= num_frames) num_frames = frame_nr + 1;
 }
 
 byte Rainbowduino::get_frame_row(byte frame_nr, byte row) {
-  if(frame_nr > num_frames) return 0;
+  if(frame_nr >= num_frames) return 0;
   word offset = frame_nr * NUM_ROWS;
   return frame_buffer[offset+row];
 }
 
 void Rainbowduino::set_frame_line(byte frame_nr, byte x, byte red, byte green, byte blue) {
-  if(frame_nr > MAX_NUM_FRAMES) return;
+  if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS;
   frame_buffer[offset+x]   = blue;
   frame_buffer[offset+x+1] = red;
@@ -90,7 +90,7 @@ void Rainbowduino::set_frame_line(byte frame_nr, byte x, byte red, byte green, b
 }
 
 void Rainbowduino::set_frame_pixel(byte frame_nr, byte x, byte y, byte red, byte green, byte blue) {
-  if(frame_nr > MAX_NUM_FRAMES) return;
+  if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS;
   frame_buffer[offset+x  ] = (blue  > 0) ? frame_buffer[offset+x]   | (1<<y) : frame_buffer[offset+x]   & ~(1<<y);
   frame_buffer[offset+x+1] = (red   > 0) ? frame_buffer[offset+x+1] | (1<<y) : frame_buffer[offset+x+1] & ~(1<<y);
@@ -125,13 +125,13 @@ void Rainbowduino::draw_row(byte row, byte level, byte r, byte b, byte g) {
 
 void Rainbowduino::draw_color(byte c) {
   for(byte color = 0; color < 8; color++) {
-    if(c > 127) {
+    if((c & 1) == 1) {
       shift_data_1;
     }
     else {
       shift_data_0;
     }
-    c = c << 1;
+    c = c >> 1;
     clk_rising;
   }
 }
