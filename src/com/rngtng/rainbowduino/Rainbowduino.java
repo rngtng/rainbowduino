@@ -81,7 +81,7 @@ public class Rainbowduino  implements RCodes{
 	public void initPort(int _baud) {
 		this.initPort(null, _baud, true);
 	}	
-	
+
 	/**
 	 * Open serial port with given name and baud rate.
 	 * No sensity checks
@@ -99,7 +99,7 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	/* *********************** */
-	
+
 	/**
 	 * Open serial port with given name. Send ping to check if port is working.
 	 * If not port is closed and set back to null
@@ -111,14 +111,12 @@ public class Rainbowduino  implements RCodes{
 	private boolean openPort(String port_name, boolean check) {
 		if(port_name == null) return false;
 		port = new Serial(app, port_name, this.baud);
-		port.buffer(0);				
+		port.buffer(20);
 		if(!check) return true; //skip check
 		try { //for some reason first byte is 252 when init Rainbowduino, so we wait for this first
-			waitAndReadSerial();
+			waitAndReadSerial(); 
 		} catch (RainbowduinoTimeOut e) {
-			e.printStackTrace();
-		}
-		PApplet.println("pinging");
+		}				
 		if(ping()) return true;					
 		PApplet.println("No response");        			
 		if(port != null) port.stop();
@@ -130,7 +128,7 @@ public class Rainbowduino  implements RCodes{
 	public int apiVersion() {	   
 		try {
 			sendCommand(API_VERSION);
-			return receive();
+			return receive(API_VERSION);
 		} catch (RainbowduinoError e) {
 			e.printStackTrace();
 		}		
@@ -140,7 +138,7 @@ public class Rainbowduino  implements RCodes{
 	public boolean ping() {		
 		try {
 			sendCommand(PING);
-			receive();
+			receive(PING);
 			return true;
 		} catch (RainbowduinoError e) {
 			e.printStackTrace();
@@ -170,7 +168,7 @@ public class Rainbowduino  implements RCodes{
 	public int frameGet() {	   
 		try {
 			sendCommand(FRAME_GET);
-			return receive();
+			return receive(FRAME_GET);
 		} catch (RainbowduinoError e) {
 			e.printStackTrace();
 		}		
@@ -178,7 +176,7 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	/* +++++++++++++++++++ */
-	
+
 	public void brightnessSet(int brightness) {
 		sendCommand(BRIGHTNESS_SET);
 		sendParam(brightness);
@@ -187,25 +185,25 @@ public class Rainbowduino  implements RCodes{
 	public int brightnessGet() {	   
 		try {
 			sendCommand(BRIGHTNESS_GET);
-			return receive();
+			return receive(FRAME_GET);
 		} catch (RainbowduinoError e) {
 			e.printStackTrace();
 		}		
 		return 0;
 	}	
-	
+
 	/* +++++++++++++++++++ */
 	public int bufferSetAt(int adr, int[] content) {
 		return bufferSetAt(adr, content, false);
 	}
-	
+
 	public int bufferSetAt(int adr, int[] content, boolean check) {	   
 		try {
 			sendCommand(BUFFER_SET_AT);
 			sendParam(adr);
 			if(check) {
-			  int accepted_size = receive(); 
-			  if(content.length != accepted_size) return 0; //MISSMATCH!!!!
+				int accepted_size = receive(BUFFER_SET_AT); 
+				if(content.length != accepted_size) return 0; //MISSMATCH!!!!
 			}
 			for(int i = 0; i < content.length; i++) {
 				send(content[i]);
@@ -220,7 +218,8 @@ public class Rainbowduino  implements RCodes{
 		try {
 			sendCommand(BUFFER_GET_AT);
 			sendParam(adr);
-			int size = receive();
+			int size = receive(BUFFER_GET_AT);
+			PApplet.println("Size :" + size);
 			int[] content = new int[size];
 			for(int i = 0; i < size; i++) {			
 				try {
@@ -239,7 +238,7 @@ public class Rainbowduino  implements RCodes{
 	public int bufferLength() {
 		try {
 			sendCommand(BUFFER_LENGTH);
-			return receive();
+			return receive(BUFFER_LENGTH);
 		} catch (RainbowduinoError e) {
 			e.printStackTrace();
 		}
@@ -250,8 +249,14 @@ public class Rainbowduino  implements RCodes{
 		sendCommand(BUFFER_SAVE);
 	}	
 
-	public void bufferLoad() {
-		sendCommand(BUFFER_LOAD);
+	public int bufferLoad() {
+		try {
+			sendCommand(BUFFER_LOAD);
+			return receive(BUFFER_LOAD);
+		} catch (RainbowduinoError e) {
+			e.printStackTrace();
+		}
+		return 0;				
 	}		
 
 	/* +++++++++++++++++++ */
@@ -263,7 +268,7 @@ public class Rainbowduino  implements RCodes{
 	public int speedGet() {	   
 		try {
 			sendCommand(SPEED_GET);
-			return receive();
+			return receive(SPEED_GET);
 		} catch (RainbowduinoError e) {
 			e.printStackTrace();
 		}
@@ -295,25 +300,26 @@ public class Rainbowduino  implements RCodes{
 		send(param);						
 	}
 
-	public int receive() throws RainbowduinoError {
+	public int receive(int command) throws RainbowduinoError {
 		//PApplet.println("Wait return");
 		//wait for response code
 		try {	
-			int response = waitAndReadSerial();
-			if(response == OK) {
+			switch(waitAndReadSerial()) {
+			case ERROR:
+				//return error code
+				throw new RainbowduinoError(waitAndReadSerial());							
+			case OK:
 				//return ok code
 				//PApplet.println("Get return param");
-				return waitAndReadSerial();
-			}
-			else {
-				PApplet.println("ERROR: Returns: " + response);
-				//return error code
-				throw new RainbowduinoError( waitAndReadSerial() );
+				if(waitAndReadSerial() == command) return waitAndReadSerial();
+				PApplet.println("wrong command");
+			default:
+				return receive(command);
 			}
 		}
 		catch( RainbowduinoTimeOut e) {  
 			throw new RainbowduinoError(ERROR_TIME_OUT);
-		}		
+		}	
 	}
 
 	/* +++++++++++++++++++ */
