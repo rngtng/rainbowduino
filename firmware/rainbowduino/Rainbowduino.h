@@ -1,5 +1,5 @@
 /*
- * Rainbowduino.h version 1.02 - A driver to run Seeedstudio 8x8 RBG LED Matrix
+ * Rainbowduino.h version 2.0 - A driver to run Seeedstudio 8x8 RBG LED Matrix
  * Based on Rainbow.h by Seedstudio.com -> http://www.seeedstudio.com/depot/rainbowduino-led-driver-platform-plug-and-shine-p-371.html
  * Copyright (c) 2009 Tobias Bielohlawek -> http://www.rngtng.com
  *
@@ -28,8 +28,8 @@
 #define enable_oe   {SH_PORT &= ~SH_BIT_OE; }
 #define disable_oe  {SH_PORT |= SH_BIT_OE; }
 
-#define shift_data_1     {SH_PORT |= SH_BIT_SDI;}
-#define shift_data_0     {SH_PORT &= ~SH_BIT_SDI;}
+#define shift_data_1 {SH_PORT |= SH_BIT_SDI;}
+#define shift_data_0 {SH_PORT &= ~SH_BIT_SDI;}
 
 #define NUM_LINES 8
 #define NUM_ROWS 24 // 3 BYTES per ROW  x 8 Lines = 24Bytes
@@ -45,7 +45,6 @@ public:
   
   /////////////////////////
   void reset();
-  // void set_num_frames(byte new_num_frames);
   byte get_num_frames();
 
   void set_current_frame_nr(byte frame_nr);

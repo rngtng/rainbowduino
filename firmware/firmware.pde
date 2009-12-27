@@ -64,16 +64,14 @@ void reset() {
 
 void loop() {
   check_serial();
-  next_frame();
-}
-
-void next_frame() {
-  if(!running) return;
-  if(current_delay < 1) {
-    current_delay = current_speed;
-    rainbow.next_frame();
+  // next frame
+  if(running) {
+    if(current_delay < 1) {
+      current_delay = current_speed;
+      rainbow.next_frame();
+    }
+    current_delay--;
   }
-  current_delay--;
 }
 
 void check_serial() {
@@ -88,7 +86,7 @@ void check_serial() {
     case API_VERSION:
       ok(received, API_VERSION_NR);
       break;
-      
+
     case RESET:
       load_from_eeprom(0);
       reset();
@@ -109,7 +107,7 @@ void check_serial() {
     case FRAME_GET:
       ok(received, rainbow.get_current_frame_nr());
       break;
-      
+
       /* Brightness Control */
     case BRIGHTNESS_SET:
       brightness = wait_and_read_serial();
@@ -126,7 +124,6 @@ void check_serial() {
       for(byte row = 0; row < NUM_ROWS; row++) {
         rainbow.set_frame_row(param, row, wait_and_read_serial());
       }
-      //ok(received, NUM_ROWS); //Do we need that??     
       break;
     case BUFFER_GET_AT:
       param = wait_and_read_serial(); //read adress value
@@ -146,7 +143,7 @@ void check_serial() {
       load_from_eeprom(0);
       ok(received, rainbow.get_num_frames());
       break;      
-      
+
       /* Speed Control */
     case SPEED_SET:
       param = wait_and_read_serial(); //read speed value
@@ -170,7 +167,6 @@ void check_serial() {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-
 byte read_serial() {
   return Serial.read();
 }
@@ -187,40 +183,10 @@ boolean ok(byte command, byte param) {
   Serial.write(param);
 }
 
-
- 
 ///////////////////////////////////////////////////////////////////////////
-
-void send_eeprom( word addr ) {
-  word num_frames = EEPROM.read(addr++); 
-  num_frames = min(MAX_NUM_FRAMES, num_frames);
-  Serial.write(num_frames);
-
-  for( word frame_nr = 0; frame_nr < num_frames; frame_nr++ ) {
-    for( byte row = 0; row < NUM_ROWS; row++ ) {
-      Serial.write( EEPROM.read(addr++) );
-    }
-    delay(1);
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////
-
-void write_to_eeprom( word addr ) {
-  word num_frames = wait_and_read_serial();
-  EEPROM.write(addr++, num_frames);
-
-  for( word frame_nr = 0; frame_nr < num_frames; frame_nr++ ) {
-    for( byte row = 0; row < NUM_ROWS; row++ ) {
-      EEPROM.write(addr++, wait_and_read_serial()); //TODO: this will likely fail if addr is bigger than we actually can adress
-    }
-  }
-}
-
-void save_to_eeprom( word addr ) {
+void save_to_eeprom(word addr) {
   word num_frames = rainbow.get_num_frames();
   EEPROM.write(addr++, num_frames);
-
   for( word frame_nr = 0; frame_nr < num_frames; frame_nr++ ) {
     for( byte row = 0; row < NUM_ROWS; row++ ) {
       EEPROM.write(addr++, rainbow.get_frame_row(frame_nr, row));
@@ -229,7 +195,7 @@ void save_to_eeprom( word addr ) {
 }
 
 
-void load_from_eeprom( word addr ) {
+void load_from_eeprom(word addr) {
   word num_frames = EEPROM.read(addr++);
   for( word frame_nr = 0; frame_nr < num_frames; frame_nr++ ) {
     for( byte row = 0; row < NUM_ROWS; row++ ) {
@@ -237,8 +203,4 @@ void load_from_eeprom( word addr ) {
     }
   }
 }
-
-
-
-
 

@@ -1,5 +1,5 @@
 /*
- * Rainbowduino.h version 1.02 - A driver to run Seeedstudio 8x8 RBG LED Matrix
+ * Rainbowduino.h version 2.0 - A driver to run Seeedstudio 8x8 RBG LED Matrix
  * Copyright (c) 2009 Tobias Bielohlawek -> http://www.rngtng.com
  *
  */
@@ -34,11 +34,6 @@ void Rainbowduino::reset() {
   current_frame_offset = 0;
   num_frames = 0;
 }
-
-/*
-void Rainbowduino::set_num_frames(byte new_num_frames) {
- num_frames = min(new_num_frames, MAX_NUM_FRAMES);
- } */
 
 byte Rainbowduino::get_num_frames() {
   return num_frames;
@@ -100,6 +95,7 @@ void Rainbowduino::set_frame_pixel(byte frame_nr, byte x, byte y, byte red, byte
 
 //=== Drawing ===========================================================
 void Rainbowduino::draw(byte level) {
+  if(num_frames == 0) return; //no frames available
   off = current_frame_nr * NUM_ROWS + current_row;
   draw_row(current_row / 3, level, frame_buffer[off++], frame_buffer[off++], frame_buffer[off++]);
   if(current_row >= NUM_ROWS - 1) {

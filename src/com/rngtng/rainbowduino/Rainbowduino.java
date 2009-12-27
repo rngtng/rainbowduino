@@ -68,6 +68,13 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	/**
+	 * @return wheter rainbowudino is connected
+	 */
+	public boolean connected() {
+		return (port != null);
+	}	
+
+	/**
 	 * auto init serial port by default values
 	 */
 	public void initPort() {
@@ -124,7 +131,9 @@ public class Rainbowduino  implements RCodes{
 		return false;
 	}
 
-	/* +++++++++++++++++++ */	
+	/**
+	 * @return int version number of the api 
+	 */
 	public int apiVersion() {	   
 		try {
 			sendCommand(API_VERSION);
@@ -135,6 +144,11 @@ public class Rainbowduino  implements RCodes{
 		return 0;
 	}
 
+	/**
+	 * 
+	 * @return wheter ping was successfull
+	 * @TODO: add time??
+	 */
 	public boolean ping() {		
 		try {
 			sendCommand(PING);
@@ -146,25 +160,40 @@ public class Rainbowduino  implements RCodes{
 		return false;
 	}
 
-	/* +++++++++++++++++++ */	
-
+	/**
+	 *  resets rainbowduino
+	 */
 	public void reset() {
 		sendCommand(RESET);
 	}
 
+	/**
+	 *  start running standalone, looping throgh set frames
+	 */
 	public void start() {	   
 		sendCommand(START);
 	}
 
+	/**
+	 *  stops running
+	 */
 	public void stop() {
 		sendCommand(STOP);
 	}
 
+	/**
+	 * set frame pointer to given position
+	 *  
+	 * @param frame_pos number of frame to set to
+	 */
 	public void frameSet(int frame_pos) {
 		sendCommand(FRAME_SET);
 		sendParam(frame_pos);
 	}
 
+	/**
+	 * @return current position of frame pointer
+	 */
 	public int frameGet() {	   
 		try {
 			sendCommand(FRAME_GET);
@@ -176,12 +205,17 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	/* +++++++++++++++++++ */
-
+	/**
+	 * Sets the brightness value
+	 */
 	public void brightnessSet(int brightness) {
 		sendCommand(BRIGHTNESS_SET);
 		sendParam(brightness);
 	}
 
+	/**
+	 * @return the current brightness value
+	 */
 	public int brightnessGet() {	   
 		try {
 			sendCommand(BRIGHTNESS_GET);
@@ -193,27 +227,39 @@ public class Rainbowduino  implements RCodes{
 	}	
 
 	/* +++++++++++++++++++ */
-	public int bufferSetAt(int adr, int[] content) {
-		return bufferSetAt(adr, content, false);
+	/**
+	 * fills buffer with given data at given position
+	 */
+	public void bufferSetAt(int adr, int[] content) {
+		bufferSetAt(adr, content, false);
 	}
 
-	public int bufferSetAt(int adr, int[] content, boolean check) {	   
+	/**
+	 * fills buffer with given data at given position
+	 * @param adr position
+	 * @param content buffer data
+	 * @param check wheter to perform sensity check
+	 */
+	public void bufferSetAt(int adr, int[] content, boolean check) {	   
 		try {
 			sendCommand(BUFFER_SET_AT);
 			sendParam(adr);
 			if(check) {
 				int accepted_size = receive(BUFFER_SET_AT); 
-				if(content.length != accepted_size) return 0; //MISSMATCH!!!!
+				if(content.length != accepted_size) throw new RainbowduinoError(ERROR_MISSMATCH);
 			}
 			for(int i = 0; i < content.length; i++) {
 				send(content[i]);
-			}						
-		} catch (Exception e) {			
+			}			
+		} catch (RainbowduinoError e) {			
 			e.printStackTrace();
-		}
-		return 0;
+		}		
 	}
 
+	/** 
+	 * @param adr
+	 * @return buffer data at given position
+	 */
 	public int[] bufferGetAt(int adr) {	 		
 		try {
 			sendCommand(BUFFER_GET_AT);
@@ -225,7 +271,7 @@ public class Rainbowduino  implements RCodes{
 				try {
 					content[i] = waitAndReadSerial();
 				} catch (RainbowduinoTimeOut e) {
-					throw new RainbowduinoError( ERROR_TIME_OUT );
+					throw new RainbowduinoError(ERROR_TIME_OUT);
 				}
 			}
 			return content;
@@ -235,6 +281,9 @@ public class Rainbowduino  implements RCodes{
 		return null;
 	}	
 
+	/**
+	 * @return buffer length
+	 */
 	public int bufferLength() {
 		try {
 			sendCommand(BUFFER_LENGTH);
@@ -245,10 +294,16 @@ public class Rainbowduino  implements RCodes{
 		return 0;		
 	}
 
+	/**
+	 * saves current buffer to EEPROM
+	 */
 	public void bufferSave() {
 		sendCommand(BUFFER_SAVE);
 	}	
 
+	/**
+	 * loads current buffer from EEPROM
+	 */
 	public int bufferLoad() {
 		try {
 			sendCommand(BUFFER_LOAD);
@@ -260,11 +315,17 @@ public class Rainbowduino  implements RCodes{
 	}		
 
 	/* +++++++++++++++++++ */
+	/**
+	 * sets speed to given value
+	 */
 	public void speedSet(int speed_value) {
 		sendCommand(SPEED_SET);
 		sendParam(speed_value);
 	}
 
+	/**
+	 * @return current speed
+	 */
 	public int speedGet() {	   
 		try {
 			sendCommand(SPEED_GET);
@@ -275,18 +336,22 @@ public class Rainbowduino  implements RCodes{
 		return 0;
 	}	
 
+	/**
+	 * increases speed value
+	 */
 	public void speedUp() {
 		sendCommand(SPEED_INC);
 	}
 
+	/**
+	 * decreases speed value
+	 */
 	public void speedDown() {
 		sendCommand(SPEED_DEC);
 	}
 
 	/* +++++++++++++++++++ */
-
-	public void sendCommand(int command_code) {
-		//PApplet.println("Command: " + command_code);		
+	private void sendCommand(int command_code) {		
 		//init command			
 		send(COMMAND);
 		//flush buffer		
@@ -295,13 +360,12 @@ public class Rainbowduino  implements RCodes{
 		send(command_code);
 	}
 
-	public void sendParam(int param) {
+	private void sendParam(int param) {
 		//send param			
 		send(param);						
 	}
 
-	public int receive(int command) throws RainbowduinoError {
-		//PApplet.println("Wait return");
+	private int receive(int command) throws RainbowduinoError {		
 		//wait for response code
 		try {	
 			switch(waitAndReadSerial()) {
@@ -310,9 +374,7 @@ public class Rainbowduino  implements RCodes{
 				throw new RainbowduinoError(waitAndReadSerial());							
 			case OK:
 				//return ok code
-				//PApplet.println("Get return param");
 				if(waitAndReadSerial() == command) return waitAndReadSerial();
-				PApplet.println("wrong command");
 			default:
 				return receive(command);
 			}
@@ -324,7 +386,7 @@ public class Rainbowduino  implements RCodes{
 
 	/* +++++++++++++++++++ */
 	private void send(int value) {
-		if(port == null ) return;
+		if(!connected()) return;
 		port.write(value);
 	}
 
@@ -333,10 +395,10 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	private int waitAndReadSerial(int timeout) throws RainbowduinoTimeOut {
-		//what if port is NULL??
+		if(!!connected()) throw new RainbowduinoTimeOut();
 		while( timeout > 0 && port.available() < 1) {
 			//print(".");
-			sleep(100);
+			sleep(100); //in ms
 			timeout--;
 			if(timeout == 0) throw new RainbowduinoTimeOut();
 		}
@@ -354,7 +416,7 @@ public class Rainbowduino  implements RCodes{
 	class RainbowduinoTimeOut extends Exception {}
 	class RainbowduinoError extends Exception {
 		public RainbowduinoError(int error) {
-			PApplet.println(error);
+			PApplet.println("Error happend:" + error);
 		}
 	}
 

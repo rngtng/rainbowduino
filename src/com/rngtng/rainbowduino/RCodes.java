@@ -49,5 +49,6 @@ public interface RCodes {
 	public final static int OK          = 1;   //followed by return params
 	
 	public final static int ERROR_TIME_OUT   = 255; // followed by error code
+	public final static int ERROR_MISSMATCH   = 254; // followed by error code
 	
 }

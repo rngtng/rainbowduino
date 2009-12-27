@@ -1,3 +1,11 @@
+/*
+ * RCodes.h version 2.0 - API definition of  processing Rainbowduino Library communication
+ * Copyright (c) 2009 Tobias Bielohlawek -> http://www.rngtng.com/mtxcontrol
+ *
+ */
+#ifndef RCODES_h
+#define RCODES_h
+
 ////////////// API COMMANDS ///////////////////////
 #define API_VERSION_NR 1
 
@@ -44,4 +52,6 @@
 #define OK          1   //followed by return params
 
 #define ERROR_TIME_OUT   255 // followed by error code	
+
+#endif //RCODES.h
 
