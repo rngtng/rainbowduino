@@ -32,24 +32,28 @@
 #define shift_data_0     {SH_PORT &= ~SH_BIT_SDI;}
 
 #define NUM_LINES 8
-#define NUM_ROWS 24 // 3 BYTES per ROW  x 8 Lines
-#define MAX_NUM_FRAMES 10 // 3 BYTES  per ROW
+#define NUM_ROWS 24 // 3 BYTES per ROW  x 8 Lines = 24Bytes
+#define MAX_NUM_FRAMES 10 // = 240Bytes
 
 #define NUM_LEVEL 16 
 
 class Rainbowduino {
 
 public:
-  byte num_frames;
-  byte max_num_frames;
-  byte num_rows;
-
   byte frame_buffer[NUM_ROWS*MAX_NUM_FRAMES]; // [FRAME_BUFFER_SIZE]; //size of EEPROM -> to read faster??
-
-  Rainbowduino(byte set_num_frames = 1);
+  Rainbowduino();
+  
+  /////////////////////////
   void reset();
-  void set_num_frames(byte new_num_frames);
+  // void set_num_frames(byte new_num_frames);
+  byte get_num_frames();
 
+  void set_current_frame_nr(byte frame_nr);
+  byte get_current_frame_nr();
+
+  void next_frame();
+
+  /////////////////////////
   void set_frame(byte frame_nr, byte* data);
 
   void set_frame_row(byte frame_nr, byte row, byte data);
@@ -61,13 +65,11 @@ public:
   //to set all 3 colors of each pixel
   void set_frame_pixel(byte frame_nr, byte x, byte y, byte red, byte green, byte blue);
 
-  void next_frame();
-  void set_frame_nr(byte frame_nr);
-  byte get_frame_nr();
-
-  void draw(byte level = 12);
+  /////////////////////////
+  void draw(byte level = 8);
 
 private:
+  byte num_frames;
   byte current_frame_nr;
   word current_frame_offset;
   word off;  //buffer offset
