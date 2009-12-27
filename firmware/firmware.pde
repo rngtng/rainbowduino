@@ -16,18 +16,17 @@
 
 #define BAUD_RATE 9600
 
-#define DEFAULT_SPEED 5000
+#define DEFAULT_SPEED 150
+#define DEFAULT_BRIGHTNESS 2
 #define SPEED_FACTOR 100
 
 Rainbowduino rainbow = Rainbowduino();  //max 10 Frames
 
 //running mode
-byte running = false;
-
-word current_delay = 0;
-word current_speed = DEFAULT_SPEED;
-
-byte brightness = 8;
+byte running;
+word current_delay;
+word current_speed;
+byte brightness;
 
 void setup_timer()               
 {
@@ -58,7 +57,8 @@ void setup() {
 void reset() {
   rainbow.reset();
   current_delay = 0;
-  current_speed = DEFAULT_SPEED;
+  current_speed = DEFAULT_SPEED * SPEED_FACTOR;
+  brightness = DEFAULT_BRIGHTNESS;
   running = false;
 }
 
@@ -68,7 +68,7 @@ void loop() {
 }
 
 void next_frame() {
-  if( !running ) return;
+  if(!running) return;
   if(current_delay < 1) {
     current_delay = current_speed;
     rainbow.next_frame();
@@ -77,90 +77,92 @@ void next_frame() {
 }
 
 void check_serial() {
-  if( !Serial.available() ) return;
-  byte value = read_serial();
-  if( value == COMMAND ) {
-    switch( wait_and_read_serial() ) {
+  if(!Serial.available()) return;
+  byte received = read_serial();
+  byte param;
+  if(received == COMMAND) {
+    received = wait_and_read_serial();
+    switch(received) {
       /* Basic Control */
     case PING:
     case API_VERSION:
-      ok(API_VERSION_NR);
+      ok(received, API_VERSION_NR);
       break;
       
     case RESET:
       load_from_eeprom(0);
       reset();
-      ok(rainbow.get_current_frame_nr());
+      ok(received, rainbow.get_current_frame_nr());
       break;
     case STOP:
       running = false;
-      ok(rainbow.get_current_frame_nr());
+      ok(received, rainbow.get_current_frame_nr());
       break;
     case START:
       running = true;
-      ok(rainbow.get_current_frame_nr());
+      ok(received, rainbow.get_current_frame_nr());
       break;            
     case FRAME_SET:
       rainbow.set_current_frame_nr(wait_and_read_serial());
-      ok(rainbow.get_current_frame_nr());
+      ok(received, rainbow.get_current_frame_nr());
       break;
     case FRAME_GET:
-      ok(rainbow.get_current_frame_nr());
+      ok(received, rainbow.get_current_frame_nr());
       break;
       
       /* Brightness Control */
     case BRIGHTNESS_SET:
       brightness = wait_and_read_serial();
-      ok(brightness);
+      ok(received, brightness);
       break;
     case BRIGHTNESS_GET:
-      ok(brightness);
+      ok(received, brightness);
       break;
 
       /* Buffer Control */
     case BUFFER_SET_AT:
-      value = wait_and_read_serial(); //read adress value
-      ok(NUM_ROWS);
+      param = wait_and_read_serial(); //read adress value
+      ok(received, NUM_ROWS);
       for(byte row = 0; row < NUM_ROWS; row++) {
-        rainbow.set_frame_row(value, row, wait_and_read_serial());
+        rainbow.set_frame_row(param, row, wait_and_read_serial());
       }
-      ok(NUM_ROWS); //Do we need that??     
+      //ok(received, NUM_ROWS); //Do we need that??     
       break;
     case BUFFER_GET_AT:
-      value = wait_and_read_serial(); //read adress value
-      ok(NUM_ROWS);
+      param = wait_and_read_serial(); //read adress value
+      ok(received, NUM_ROWS);
       for(byte row = 0; row < NUM_ROWS; row++) {
-        rainbow.get_frame_row(value, row);
+        Serial.write(rainbow.get_frame_row(param, row));
       }
       break;
     case BUFFER_LENGTH:      
-      ok(rainbow.get_num_frames());
+      ok(received, rainbow.get_num_frames());
       break;
     case BUFFER_SAVE:    
       save_to_eeprom(0);   
-      ok(rainbow.get_num_frames());
+      ok(received, rainbow.get_num_frames());
       break;      
     case BUFFER_LOAD:      
       load_from_eeprom(0);
-      ok(rainbow.get_num_frames());
+      ok(received, rainbow.get_num_frames());
       break;      
       
       /* Speed Control */
     case SPEED_SET:
-      value = wait_and_read_serial(); //read speed value
-      current_speed = value * SPEED_FACTOR;
-      ok(value);
+      param = wait_and_read_serial(); //read speed value
+      current_speed = param * SPEED_FACTOR;
+      ok(received, param);
       break;
     case SPEED_GET:
-      ok(current_speed / SPEED_FACTOR);
+      ok(received, current_speed / SPEED_FACTOR);
       break;
     case SPEED_INC:  
       if(current_speed > SPEED_FACTOR) current_speed -= SPEED_FACTOR;
-      ok(current_speed / SPEED_FACTOR);
+      ok(received, current_speed / SPEED_FACTOR);
       break;
     case SPEED_DEC:  
       current_speed += SPEED_FACTOR;
-      ok(current_speed / SPEED_FACTOR);
+      ok(received, current_speed / SPEED_FACTOR);
       break;
     }
 
@@ -178,9 +180,10 @@ byte wait_and_read_serial() {
   return read_serial();
 }
 
-boolean ok(byte param) {
+boolean ok(byte command, byte param) {
   Serial.flush();
   Serial.write(OK);
+  Serial.write(command);
   Serial.write(param);
 }
 
