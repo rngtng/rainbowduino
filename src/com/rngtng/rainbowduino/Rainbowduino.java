@@ -34,7 +34,7 @@ public class Rainbowduino  implements RCodes{
 
 	PApplet app;
 
-	int baud = 9600;
+	int baud = 57600;
 
 	Serial port;
 	String port_name;	
@@ -120,7 +120,7 @@ public class Rainbowduino  implements RCodes{
 		try {
 			port = new Serial(app, port_name, this.baud);
 			port.buffer(20);
-			sleep(300); //give it time to initialize			
+			sleep(3000); //give it time to initialize			
 			if(!check || ping()) return true; //skip check			
 			PApplet.println("No response");			
 		}
@@ -395,7 +395,7 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	private int waitAndReadSerial(int timeout) throws RainbowduinoTimeOut {
-		if(!!connected()) throw new RainbowduinoTimeOut();
+		if(!connected()) throw new RainbowduinoTimeOut();
 		while( timeout > 0 && port.available() < 1) {
 			//print(".");
 			sleep(100); //in ms

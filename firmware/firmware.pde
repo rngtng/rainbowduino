@@ -14,7 +14,7 @@
 #include "Rainbowduino.h"
 #include "RCodes.h" //API Codes
 
-#define BAUD_RATE 9600
+#define BAUD_RATE 57600
 
 #define DEFAULT_SPEED 150
 #define DEFAULT_BRIGHTNESS 2
@@ -47,7 +47,7 @@ ISR(TIMER2_OVF_vect) {
 }
 
 void setup() {
-  Serial.begin(BAUD_RATE);  
+  Serial.begin(BAUD_RATE);
   reset();
   load_from_eeprom(0);
   running = true;
@@ -160,9 +160,11 @@ void check_serial() {
     case SPEED_DEC:  
       current_speed += SPEED_FACTOR;
       ok(received, current_speed / SPEED_FACTOR);
-      break;
+      break;    
+    default:
+      //send error
+    break;
     }
-
   }
 }
 
