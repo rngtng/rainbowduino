@@ -1,89 +1,74 @@
-= launchpad
+= rainbowduino
 
-This library provides an interface to access {novation's launchpad}[http://www.novationmusic.com/products/launchpad] programmatically. It's based on Thomas Jachmanns {ruby launchpad gem}[http://github.com/thomasjachmann/launchpad]. LEDs can be lighted and button presses can be listened to. In addition, it includes a wrapper for the {Monomic Library}[http://jkriss.github.com/monomic/] as well.
+This library provides an interface to control {Seeedstudios Rainbowduino}[http://www.seeedstudio.com/depot/rainbowduino-led-driver-platform-plug-and-shine-p-371.html], a 8x8 RGB LED driver based on the Arduino Project. This Processing library removes the need of writing any code for the device itself. Just upload the included firmware and add the library to your Processing IDE - you're set up!
+
+
+== Features
+* complete API to control major function (to be extended, maybe changed as well)
+* 3 Bit Color support
+* Realtime update of the RGB LED Matrix.
+* Up to 10 Buffers which can written/read via serial and saved/loaded via EEPROM. (mind: due to 256kb memory only up to 10 frames can be stored by now).
+* Standalone mode with custom looping speed
+* Brightness control
 
 
 == Requirements
 
-* Severin Smiths {themidibus library}[http://smallbutdigital.com/themidibus.php]
-* On Mac OS X < Java Update 6 you need Humatics {mmj library}[http://www.humatic.de/htools/mmj.htm] as well. Yes, go and spend those 3.5 - it's worth it!
-* obviously a Novation Launchpad ;-)
+* obviously a Rainbowduino with USB (Serial) connection (I2C not yet supported)
+
 
 == Installation
 
-Download, unzip and put the extracted launchpad folder into the libraries folder of your processing sketches. Reference and examples are included in the launchpad folder. Do the same with *themidibus* and *monomic* library.  If needed (only Mac OS X with java Update < 6), install *mmj* library as described in their documentation.
+Download, unzip and put the extracted rainbowudino folder into the libraries folder of your processing sketches. Reference and examples are included in the folder as well. Open the firmware/firmware.pde file with the Arduino IDE and upload it to your Rainbowduino.
 
 
 == Usage
 
-Basically, create an instance of the Launchpad class and your're ready to go. This is a simple example that switches on all LEDs (for testing), resets the launchpad again and then lights the grid button at position 4/4 (from top left).
+Basically, create an instance of the Rainbowduino class and init the Serialport - you're ready to go. This is a simple example switches all LEDs to green, resets the rainbowudino and starts over again:
 
-  import themidibus.*;
-  import com.rngtng.launchpad.*;
+  import processing.serial.*;
+  import com.rngtng.rainbowduino.*;
   
-  Launchpad device;
+  Rainbowduino device;
   
   void setup() {
-    device = new Launchpad(this);
-    noLoop();
+    device = new Rainbowduino(this);
+    device.initPort();
   }
   
   void draw() {
-    device.testLeds();
+    //send green frame
+    device.bufferSetAt(0, new int[]{255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0});
     delay(1000);
     device.reset();
     delay(1000);
-    device.changeGrid( 4, 4, LColor.RED_HIGH + LColor.GREEN_LOW);
   }
 
-For Interaction, make sure to include Pressed/Released Listener for grid, the button on the top and scene buttons on the right. This is an interaction example lighting all grid buttons in red when pressed and keeping them lit.
-
-  import themidibus.*;
-  import com.rngtng.launchpad.*;
-  
-  Launchpad device;
-  
-  void setup() {
-    device = new Launchpad(this);
-    noLoop();
-  }
-  
-  void draw() {
-  }
-  
-  void launchpadGridPressed(int x, int y) {
-    device.changeGrid( x, y, LColor.RED_HIGH);
-  }
-  
-  void launchpadButtonPressed(int buttonCode) {
-    if(buttonCode == LButton.MIXER) exit();
-  }
-
-
-For more details, see the examples. Most examples are ported from the ruby and monomic library
+For more details, see the examples.
 
 == Near future plans
- * add proper Exception/Warning handling
+ * extend API, set ROW and set Pixel
+ * better color abstraction (CONST instead of numbers)
+ * support 12bit color
+ * I2C support
  * use entities instead of Consts??
  * add test (how to do this with processing??)
 
-
 == Changelog
-
-=== v0.2.0
-
-* interaction fully working, accepts PApplet or custom Listeners
-* first stable version, API is nearly fixed now
-* nice color handling using the LColor class
-* monomic wrapper class
-* lots of new examples
-* proper buffer & flashing support
 
 === v0.1.0
 
-* first version, supporting output only
+* specified API
+* first implementation
 
 
 == Copyright
+The MIT License
 
-Copyright (c) 2009 Tobias Bielohlawek, {heavily based on ruby launchpad gem}[http://github.com/thomasjachmann/launchpad] by Thomas Jachmann. See LICENSE for details.
+Copyright © 2009 RngTng, Tobias Bielohlawek
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
