@@ -351,6 +351,36 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	/* +++++++++++++++++++ */
+	/**
+	 * sets speed to given value
+	 */
+	public void slaveActiv(int slave_nr) {
+		sendCommand(SLAVE_ACTIV);
+		sendParam(slave_nr);
+	}
+	
+	/**
+	 * sets speed to given value
+	 */
+	public void slaveNrSet(int slave_nr) {
+		sendCommand(SLAVE_NR_SET);
+		sendParam(slave_nr);
+	}
+
+	/**
+	 * @return current speed
+	 */
+	public int slaveNrGet() {	   
+		try {
+			sendCommand(SLAVE_NR_GET);
+			return receive(SLAVE_NR_GET);
+		} catch (RainbowduinoError e) {
+			e.print();
+		}
+		return 0;
+	}	
+	
+	/* +++++++++++++++++++ */
 	private void sendCommand(int command_code) {		
 		//init command			
 		send(COMMAND);
@@ -358,6 +388,7 @@ public class Rainbowduino  implements RCodes{
 		if( connected() ) port.clear();		
 		//send command
 		send(command_code);
+		sleep(10);
 	}
 
 	private void sendParam(int param) {
