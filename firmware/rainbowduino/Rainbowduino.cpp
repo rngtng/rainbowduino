@@ -1,11 +1,13 @@
 /*
- * Rainbowduino.h version 2.0 - A driver to run Seeedstudio 8x8 RBG LED Matrix
- * Copyright (c) 2009 Tobias Bielohlawek -> http://www.rngtng.com
+ * Rainbowduino.h version 2.1 - A driver to run Seeedstudio 8x8 RBG LED Matrix
+ * Copyright (c) 2010 Tobias Bielohlawek -> http://www.rngtng.com
  *
  */
 
 // include this library's description file
 #include "Rainbowduino.h"
+
+#include "TimerOne.h"
 
 // include core Wiring API
 #include "WProgram.h"
@@ -14,46 +16,62 @@
 #include "pins_arduino.h"
 #include "WConstants.h"
 
-// Constructor /////////////////////////////////////////////////////////////////
-// Function that handles the creation and setup of instances
-Rainbowduino::Rainbowduino() {
+RainbowduinoDriver Rainbowduino;
+
+
+// wrapper fnc to call rawing method, maybe use member function pointer instead?
+void draw_interrupt() {
+    Rainbowduino.draw();
+}
+
+///////////////////////////////////////////////////////////////////////
+// Initializer to init Timer, IO and starting values 
+// for some reasons, this cant be writien as constructor.
+void RainbowduinoDriver::initialize() {
+  
+  //setup up timer  
+  long period = 1000000 / FRAME_HZ / NUM_LINES / NUM_LEVEL;
+  Timer1.initialize( period);
+  Timer1.attachInterrupt(draw_interrupt);  // attaches callback() as a timer overflow interrupt      
+  
+  //setups IO 
   DDRD = 0xff;
   DDRC = 0xff;
   DDRB = 0xff;
   PORTB = 0;
   PORTD = 0;
-  reset();
+  
+  reset();  
 }
 
-
 //=== Frame Show Manipulating ==========================================================
-void Rainbowduino::reset() {
+void RainbowduinoDriver::reset() {
+  level = DEFAULT_LEVEL;
   current_frame_nr = 0;
   current_row = 0;
   current_level = 0;
-  current_frame_offset = 0;
   num_frames = 0;
 }
 
-byte Rainbowduino::get_num_frames() {
+byte RainbowduinoDriver::get_num_frames() {
   return num_frames;
 }
 
-void Rainbowduino::set_current_frame_nr(byte frame_nr) {
+void RainbowduinoDriver::set_current_frame_nr(byte frame_nr) {
   if(frame_nr < num_frames) current_frame_nr = frame_nr;
 }
 
-byte Rainbowduino::get_current_frame_nr() {
+byte RainbowduinoDriver::get_current_frame_nr() {
   return current_frame_nr;
 } 
 
-void Rainbowduino::next_frame() {
+void RainbowduinoDriver::next_frame() {
   current_frame_nr++;
   if(current_frame_nr >= num_frames) current_frame_nr = 0;
 }
 
 //=== Frame Data Manipulating ==========================================================
-void Rainbowduino::set_frame(byte frame_nr, byte* data) {
+void RainbowduinoDriver::set_frame(byte frame_nr, byte* data) {
   if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS;
   for(byte row = 0; row < NUM_ROWS; row++) {
@@ -62,20 +80,20 @@ void Rainbowduino::set_frame(byte frame_nr, byte* data) {
   if(frame_nr >= num_frames) num_frames = frame_nr + 1;
 }
 
-void Rainbowduino::set_frame_row(byte frame_nr, byte row, byte data) {
+void RainbowduinoDriver::set_frame_row(byte frame_nr, byte row, byte data) {
   if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS;
   frame_buffer[offset+row] = data;
   if(frame_nr >= num_frames) num_frames = frame_nr + 1;
 }
 
-byte Rainbowduino::get_frame_row(byte frame_nr, byte row) {
+byte RainbowduinoDriver::get_frame_row(byte frame_nr, byte row) {
   if(frame_nr >= num_frames) return 0;
   word offset = frame_nr * NUM_ROWS;
   return frame_buffer[offset+row];
 }
 
-void Rainbowduino::set_frame_line(byte frame_nr, byte x, byte red, byte green, byte blue) {
+void RainbowduinoDriver::set_frame_line(byte frame_nr, byte x, byte red, byte green, byte blue) {
   if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS;
   frame_buffer[offset+x]   = blue;
@@ -84,7 +102,7 @@ void Rainbowduino::set_frame_line(byte frame_nr, byte x, byte red, byte green, b
   if(frame_nr >= num_frames) num_frames = frame_nr + 1;
 }
 
-void Rainbowduino::set_frame_pixel(byte frame_nr, byte x, byte y, byte red, byte green, byte blue) {
+void RainbowduinoDriver::set_frame_pixel(byte frame_nr, byte x, byte y, byte red, byte green, byte blue) {
   if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS;
   frame_buffer[offset+x  ] = (blue  > 0) ? frame_buffer[offset+x]   | (1<<y) : frame_buffer[offset+x]   & ~(1<<y);
@@ -94,7 +112,7 @@ void Rainbowduino::set_frame_pixel(byte frame_nr, byte x, byte y, byte red, byte
 }
 
 //=== Drawing ===========================================================
-void Rainbowduino::draw(byte level) {
+void RainbowduinoDriver::draw() {
   if(num_frames == 0) return; //no frames available
   off = current_frame_nr * NUM_ROWS + current_row;
   draw_row(current_row / 3, level, frame_buffer[off++], frame_buffer[off++], frame_buffer[off++]);
@@ -108,7 +126,7 @@ void Rainbowduino::draw(byte level) {
 }
 
 //--- colors to shift: blue, red,  green 
-void Rainbowduino::draw_row(byte row, byte level, byte r, byte b, byte g) {
+void RainbowduinoDriver::draw_row(byte row, byte level, byte r, byte b, byte g) {
   disable_oe;
   enable_row(row);
   le_high;
@@ -119,7 +137,7 @@ void Rainbowduino::draw_row(byte row, byte level, byte r, byte b, byte g) {
   enable_oe;
 }
 
-void Rainbowduino::draw_color(byte c) {
+void RainbowduinoDriver::draw_color(byte c) {
   for(byte color = 0; color < 8; color++) {
     if((c & 1) == 1) {
       shift_data_1;
@@ -133,7 +151,7 @@ void Rainbowduino::draw_color(byte c) {
 }
 
 //==============================================================
-void Rainbowduino::enable_row(byte row) {   // open the scaning row
+void RainbowduinoDriver::enable_row(byte row) {   // open the scaning row
   //better? shift word value, take upper and lower part!?  
   if(row < 3) {
     PORTB  = (PINB & ~0x07) | 0x04 >> row;
@@ -144,4 +162,3 @@ void Rainbowduino::enable_row(byte row) {   // open the scaning row
     PORTD  = (PIND & ~0xF8) | 0x80 >> (row - 3);
   }
 }
-
