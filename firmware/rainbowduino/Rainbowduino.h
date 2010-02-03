@@ -1,7 +1,7 @@
 /*
- * Rainbowduino.h version 2.0 - A driver to run Seeedstudio 8x8 RBG LED Matrix
+ * Rainbowduino.h version 2.1 - A driver to run Seeedstudio 8x8 RBG LED Matrix
  * Based on Rainbow.h by Seedstudio.com -> http://www.seeedstudio.com/depot/rainbowduino-led-driver-platform-plug-and-shine-p-371.html
- * Copyright (c) 2009 Tobias Bielohlawek -> http://www.rngtng.com
+ * Copyright (c) 2010 Tobias Bielohlawek -> http://www.rngtng.com
  *
  */
 
@@ -14,7 +14,7 @@
 //=============================================
 //MBI5168
 #define SH_DIR   DDRC
-#define SH_PORT   PORTC
+#define SH_PORT  PORTC
 
 #define SH_BIT_SDI   0x01
 #define SH_BIT_CLK   0x02
@@ -33,18 +33,22 @@
 
 #define NUM_LINES 8
 #define NUM_ROWS 24 // 3 BYTES per ROW  x 8 Lines = 24Bytes
-#define MAX_NUM_FRAMES 10 // = 240Bytes
+#define MAX_NUM_FRAMES 21 // = 24Bytes * 21 = 504Bytes 
 
 #define NUM_LEVEL 16 
+#define DEFAULT_LEVEL 1 //max 16
 
-class Rainbowduino {
+#define FRAME_HZ 75 //number of repeatings per second
+
+class RainbowduinoDriver {
 
 public:
   byte frame_buffer[NUM_ROWS*MAX_NUM_FRAMES]; // [FRAME_BUFFER_SIZE]; //size of EEPROM -> to read faster??
-  Rainbowduino();
-  
-  /////////////////////////
+  byte level;
+    
+  void initialize();
   void reset();
+
   byte get_num_frames();
 
   void set_current_frame_nr(byte frame_nr);
@@ -65,13 +69,13 @@ public:
   void set_frame_pixel(byte frame_nr, byte x, byte y, byte red, byte green, byte blue);
 
   /////////////////////////
-  void draw(byte level = 8);
+  void draw();
 
 private:
   byte num_frames;
-  byte current_frame_nr;
-  word current_frame_offset;
-  word off;  //buffer offset
+  
+  volatile byte current_frame_nr;
+  volatile word off;  //buffer offset  
   volatile byte current_row;
   volatile byte current_level;
 
@@ -80,6 +84,7 @@ private:
   void enable_row(byte row);
 };
 
-#endif //RAINBOWDUINO.h
+extern RainbowduinoDriver Rainbowduino;
 
+#endif //RAINBOWDUINO.h
 
