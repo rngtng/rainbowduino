@@ -6,7 +6,7 @@
 
 	
 <!-- #### (1) where are your processing libraries located? edit location. #### -->
-	<property name="processing" location="../../arduino/libraries"/>
+	<property name="processing" location="../../processing/libraries"/>
 
 
 <!-- #### (2) where are the jar files located that are required for compiling 
@@ -20,6 +20,7 @@
 			<include name="core.jar"/>
 			<include name="serial.jar"/>
 			<include name="RXTXcomm.jar"/>
+			<include name="arduinoloader.jar"/>
 		</fileset>
 	</path>		
 	
@@ -37,13 +38,13 @@
 	<property name="author" value="rngtng - Tobias Bielohlawek"/>
 	
 <!-- #### (6) which copyright?  edit value.  #### -->
-	<property name="copyright" value="(c) 2009"/>
+	<property name="copyright" value="(c) 2010"/>
 
 <!-- #### (7) give your library a name. edit value.  #### -->
 	<property name="libraryName"  value="rainbowduino"/>
 	
 <!-- #### (8) give your library a name. edit value.   #### -->
-	<property name="versionNumber"  value="0.1"/>
+	<property name="versionNumber"  value="0.2"/>
 	
 <!-- #### (9) your contact url. edit value. #### -->
 	<property name="yourLink"  value="http://www.rngtng.com/" />
@@ -121,7 +122,8 @@
 			<classpath>
 				<path refid="library-classpath"/>
 			</classpath>
-		</javac>
+		</javac>  	   
+  	    <copy file="firmware/firmware.hex" tofile="${bin}/firmware.hex" />
   </target>
 
 	<!-- build the distribution of the library -->
@@ -136,7 +138,7 @@
   	<mkdir dir="${dist}/reference" />
   	<mkdir dir="${dist}/src" />
   	<mkdir dir="${dist}/firmware" />
-  	<jar jarfile="${dist}/library/${jarFile}" basedir="${bin}"/>
+  	<jar jarfile="${dist}/library/${jarFile}" basedir="${bin}" />
   	<copy todir="${dist}/examples">
   		<fileset dir="examples"/>
   	</copy>
@@ -150,7 +152,7 @@
 	<!-- create the java reference of the library -->
  	<mkdir dir="${reference}" />
  	<javadoc bottom="processing library ${libraryName} by ${author}. ${copyright}" 
- 			 classpath="${libraryClasspath}/core.jar;${libraryClasspath}/serial.jar;${libraryClasspath}/RXTXcomm.jar" 
+ 			 classpath="${libraryClasspath}/core.jar;${libraryClasspath}/serial.jar;${libraryClasspath}/RXTXcomm.jar;${libraryClasspath}/arduinoloader.jar" 
  			 destdir="${reference}" 
  			 verbose="false" 
  			 stylesheetfile="resources/stylesheet.css" 
