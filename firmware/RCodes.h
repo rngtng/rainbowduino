@@ -1,6 +1,6 @@
 /*
- * RCodes.h version 2.0 - API definition of  processing Rainbowduino Library communication
- * Copyright (c) 2009 Tobias Bielohlawek -> http://www.rngtng.com/mtxcontrol
+ * RCodes.h version 2.1 - API definition of  processing Rainbowduino Library communication
+ * Copyright (c) 2010 Tobias Bielohlawek -> http://www.rngtng.com/mtxcontrol
  *
  */
 #ifndef RCODES_h

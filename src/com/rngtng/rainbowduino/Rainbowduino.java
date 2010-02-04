@@ -21,6 +21,11 @@ Boston, MA  02111-1307  USA
 
 package com.rngtng.rainbowduino;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+import com.rngtng.arduinoloader.ArduinoLoader;
+
 import processing.core.PApplet;
 import processing.serial.Serial;
 
@@ -32,17 +37,19 @@ import processing.serial.Serial;
  */
 public class Rainbowduino  implements RCodes{
 
-	PApplet app;
+	public int UPLOAD_BAUD = 19200;	
+	public int BAUD = 57600;	
 
-	int baud = 57600;
-
-	Serial port;
-	String port_name;	
+	public final int TIMEOUT = 50; //ms
+	public final String VERSION = "0.1";
 
 	public static int width = 8;
-	public static int height = width;
+	public static int height = width;	
 
-	public final String VERSION = "0.1";
+	PApplet app;
+
+	Serial port;
+	public String port_name;	
 
 	/**
 	 * Create a new instance to communicate with the rainbowduino. Make sure to (auto)init the serial port, too 
@@ -94,15 +101,16 @@ public class Rainbowduino  implements RCodes{
 	 * No sensity checks
 	 * 
 	 */
-	public void initPort(String port_name, int _baud, boolean check) {
-		if(_baud > 0) this.baud = _baud;
+	public boolean initPort(String port_name, int _baud, boolean check) {
+		if(_baud > 0) this.BAUD = _baud;
 		openPort(port_name, check);
 		String[] ports = Serial.list();
 		for(int i = 0; port == null && i < ports.length; i++) {
 			if(PApplet.match(ports[i], "tty") == null) continue;
 			//PApplet.println(ports[i]);
 			openPort(ports[i], check);
-		}			
+		}
+		return connected();
 	}
 
 	/* *********************** */
@@ -115,12 +123,13 @@ public class Rainbowduino  implements RCodes{
 	 * @param check whether to perform valid checks
 	 * @return whether port could be opened sucessfully 
 	 */
-	private boolean openPort(String port_name, boolean check) {
-		if(port_name == null) return false;
+	private boolean openPort(String _port_name, boolean check) {
+		if(_port_name == null) return false;
 		try {
-			port = new Serial(app, port_name, this.baud);
+			port = new Serial(app, _port_name, this.BAUD);
 			port.buffer(20);
-			sleep(3000); //give it time to initialize			
+			sleep(3000); //give it time to initialize
+			this.port_name = _port_name;
 			if(!check || ping()) return true; //skip check			
 			PApplet.println("No response");			
 		}
@@ -128,8 +137,43 @@ public class Rainbowduino  implements RCodes{
 		}
 		if(port != null) port.stop();        					
 		port = null;
+		this.port_name = null;
 		return false;
 	}
+
+
+	/**
+	 * @return boolean if successfull 
+	 */
+	public boolean uploadFirmware() {	
+		if(!connected()) return false;
+		
+		this.port.stop();
+		if(uploadFirmware( this.port_name, this.UPLOAD_BAUD) ) {
+			sleep(3000);
+			this.initPort();
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * @return boolean if successfull 
+	 */
+	public boolean uploadFirmware(String portName, int baud) {	   
+		try {
+			ClassLoader cl = this.getClass().getClassLoader();			
+			BufferedReader in = new BufferedReader( new InputStreamReader( cl.getResourceAsStream("firmware.hex") ) );		
+
+			int imagesize = ArduinoLoader.upload( in, portName, baud, 128);
+			System.out.println("Completed, " + imagesize + " bytes uploaded");
+		}
+		catch(Exception e ) {
+			PApplet.println( e.getMessage());
+			return false;
+		}
+		return true;
+	}	
 
 	/**
 	 * @return int version number of the api 
@@ -358,7 +402,7 @@ public class Rainbowduino  implements RCodes{
 		sendCommand(SLAVE_ACTIV);
 		sendParam(slave_nr);
 	}
-	
+
 	/**
 	 * sets speed to given value
 	 */
@@ -379,7 +423,7 @@ public class Rainbowduino  implements RCodes{
 		}
 		return 0;
 	}	
-	
+
 	/* +++++++++++++++++++ */
 	private void sendCommand(int command_code) {		
 		//init command			
@@ -422,7 +466,7 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	private int waitAndReadSerial() throws RainbowduinoTimeOut {
-		return waitAndReadSerial(50);
+		return waitAndReadSerial(TIMEOUT);
 	}
 
 	private int waitAndReadSerial(int timeout) throws RainbowduinoTimeOut {

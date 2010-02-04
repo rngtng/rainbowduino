@@ -6,5 +6,6 @@
 	<classpathentry kind="lib" path="/Applications/Processing.app/Contents/Resources/Java/core.jar"/>
 	<classpathentry kind="lib" path="/Applications/Processing.app/Contents/Resources/Java/modes/java/libraries/serial/library/RXTXcomm.jar"/>
 	<classpathentry kind="lib" path="/Applications/Processing.app/Contents/Resources/Java/modes/java/libraries/serial/library/serial.jar"/>
+	<classpathentry kind="lib" path="/Users/ted/Sites/java/libs/arduinoloader.jar"/>
 	<classpathentry kind="output" path="resources/code"/>
 </classpath>

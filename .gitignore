@@ -3,6 +3,4 @@ bin
 distribution
 reference
 resources/code
-firmware/applet
-i2c_slave/applet
-i2c_master/applet
+applet
