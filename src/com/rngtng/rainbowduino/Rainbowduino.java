@@ -65,12 +65,13 @@ public class Rainbowduino  implements RCodes {
 	}
 
 	public void close() {
+		app.unregisterDispose(this);
 		dispose();
 	}
 
 	public void dispose() {
 		if(connected()) port.stop();
-		port = null;
+		port = null;		
 	}
 
 	/**
@@ -479,7 +480,7 @@ public class Rainbowduino  implements RCodes {
 		}		
 	}
 
-	/******************* deprecated Stuf ************************************/
+	/******************* deprecated Stuff ************************************/
 	public void initPort() {
 		this.initPort(null, 0, true);
 	}
