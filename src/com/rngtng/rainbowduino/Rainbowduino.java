@@ -35,34 +35,37 @@ import processing.serial.Serial;
  * @author rngtng - Tobias Bielohlawek
  *
  */
-public class Rainbowduino  implements RCodes{
+public class Rainbowduino  implements RCodes {
 
-	public int UPLOAD_BAUD = 19200;	
-	public int BAUD = 57600;	
+	public final int UPLOAD_BAUDRATE = 19200;	
+	public final int BAUDRATE = 57600;	
 
 	public final int TIMEOUT = 50; //ms
-	public final String VERSION = "0.1";
+	public final String VERSION = "0.2";
+
+	PApplet app;
+	Serial port;
 
 	public static int width = 8;
 	public static int height = width;	
-
-	PApplet app;
-
-	Serial port;
-	public String port_name;	
 
 	/**
 	 * Create a new instance to communicate with the rainbowduino. Make sure to (auto)init the serial port, too 
 	 * 
 	 * @param _app parent Applet
-	 */
+	 */	
 	public Rainbowduino(PApplet _app) {
+		this(_app, RainbowduinoDetector.getAvailablePortName(_app));
+	}	
+
+	public Rainbowduino(PApplet _app, String portName) {
 		this.app = _app;
-		app.registerDispose(this);
+		openPort(portName);		
 	}
 
 	public void dispose() {
 		if(connected()) port.stop();
+		port = null;
 	}
 
 	/**
@@ -82,76 +85,15 @@ public class Rainbowduino  implements RCodes{
 	}	
 
 	/**
-	 * auto init serial port by default values
-	 */
-	public void initPort() {
-		this.initPort(null, 0, true);
-	}
-
-	/**
-	 * Auto init serial port with given baud rate
-	 * @param _baud
-	 */
-	public void initPort(int _baud) {
-		this.initPort(null, _baud, true);
-	}	
-
-	/**
-	 * Open serial port with given name and baud rate.
-	 * No sensity checks
-	 * 
-	 */
-	public boolean initPort(String port_name, int _baud, boolean check) {
-		if(_baud > 0) this.BAUD = _baud;
-		openPort(port_name, check);
-		String[] ports = Serial.list();
-		for(int i = 0; port == null && i < ports.length; i++) {
-			if(PApplet.match(ports[i], "tty") == null) continue;
-			//PApplet.println(ports[i]);
-			openPort(ports[i], check);
-		}
-		return connected();
-	}
-
-	/* *********************** */
-
-	/**
-	 * Open serial port with given name. Send ping to check if port is working.
-	 * If not port is closed and set back to null
-	 * 
-	 * @param port_name port to open
-	 * @param check whether to perform valid checks
-	 * @return whether port could be opened sucessfully 
-	 */
-	private boolean openPort(String _port_name, boolean check) {
-		if(_port_name == null) return false;
-		try {
-			port = new Serial(app, _port_name, this.BAUD);
-			port.buffer(20);
-			sleep(3000); //give it time to initialize
-			this.port_name = _port_name;
-			if(!check || ping()) return true; //skip check			
-			PApplet.println("No response");			
-		}
-		catch (Exception e) {			
-		}
-		if(port != null) port.stop();        					
-		port = null;
-		this.port_name = null;
-		return false;
-	}
-
-
-	/**
 	 * @return boolean if successfull 
 	 */
 	public boolean uploadFirmware() {	
 		if(!connected()) return false;
 		
 		this.port.stop();
-		if(uploadFirmware( this.port_name, this.UPLOAD_BAUD) ) {
+		if(uploadFirmware( this.getPortName(), this.UPLOAD_BAUDRATE) ) {
 			sleep(3000);
-			this.initPort();
+			this.openPort(this.getPortName());
 			return true;
 		}
 		return false;
@@ -193,7 +135,7 @@ public class Rainbowduino  implements RCodes{
 	 * @return wheter ping was successfull
 	 * TODO: add time??
 	 */
-	public boolean ping() {		
+	public boolean ping() {
 		try {
 			sendCommand(PING);
 			receive(PING);
@@ -212,7 +154,7 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	/**
-	 *  start running standalone, looping throgh set frames
+	 *  start running standalone, looping through set frames
 	 */
 	public void start() {	   
 		sendCommand(START);
@@ -459,7 +401,32 @@ public class Rainbowduino  implements RCodes{
 		}	
 	}
 
+	public String getPortName() {
+		if(connected()) return port.port.getName();
+		return null;
+	}
+
 	/* +++++++++++++++++++ */
+	/**
+	 * Open serial port with given name. Send ping to check if port is working.
+	 * If not port is closed and set back to null
+	 * 
+	 * @param portName port to open
+	 * @param check whether to perform valid checks
+	 * @return whether port could be opened sucessfully 
+	 */
+	private boolean openPort(String portName) {		
+		try {
+			port = new Serial(app, portName, BAUDRATE);
+			port.buffer(20);
+			return true;
+		}
+		catch (Exception e) {
+			PApplet.println("Error port");
+		}
+		return false;
+	}
+
 	private void send(int value) {
 		if(!connected()) return;
 		port.write(value);
@@ -489,6 +456,7 @@ public class Rainbowduino  implements RCodes{
 	}
 
 	class RainbowduinoTimeOut extends Exception {}
+
 	class RainbowduinoError extends Exception {
 		int error;
 
