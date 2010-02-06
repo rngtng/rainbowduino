@@ -40,7 +40,7 @@ public class Rainbowduino  implements RCodes {
 	public final int UPLOAD_BAUDRATE = 19200;	
 	public final int BAUDRATE = 57600;	
 
-	public final int TIMEOUT = 50; //ms
+	public final int TIMEOUT = 20; // * 100 ms
 	public final String VERSION = "0.2";
 
 	PApplet app;
@@ -427,7 +427,6 @@ public class Rainbowduino  implements RCodes {
 			return true;
 		}
 		catch (RuntimeException e) {
-			PApplet.println("Error port");
 		}
 		return false;
 	}
@@ -435,12 +434,11 @@ public class Rainbowduino  implements RCodes {
 	private void send(int value) {
 		if(!connected()) return;
 		try {
-			port.write(value);
+			port.write(value);			
 		}
-		//catch(gnu.io.PortInUseException e) {
-		//}
 		catch(RuntimeException e) {
-			PApplet.println( getPortName());
+			RainbowduinoDetector.notifyError(this);
+			this.close();
 		}
 	}
 
