@@ -5,13 +5,21 @@ import java.util.Vector;
 import processing.core.PApplet;
 import processing.serial.Serial;
 
-public class RainbowduinoDetector {
+public class RainbowduinoDetector extends Thread {
 
+	final int START_THREAD_SLEEP = 500;
+	final int THREAD_SLEEP = 5000;
+	
 	static RainbowduinoDetector rainbowduinoDetector; 
 
 	PApplet app;
 	private Vector<String> checked_ports;
 	private Vector<RainbowduinoListener> listeners;
+
+	private static Thread thread;
+	
+	private int thread_sleep = START_THREAD_SLEEP;
+	public boolean running = false;
 	
 	public static RainbowduinoDetector init(PApplet _app) {
 		if(rainbowduinoDetector == null) { 
@@ -21,13 +29,19 @@ public class RainbowduinoDetector {
 	}
 
 	public static void start(PApplet _app) {
-		//RainbowduinoAutodetector.init(_app).
+		thread = RainbowduinoDetector.init(_app);
+		((RainbowduinoDetector) thread).running = true;
+		thread.start();
 	}
 
+	public static void stopp() {		
+		((RainbowduinoDetector) thread).running = false;
+	}
+	
 	public static String getAvailablePortName(PApplet _app) {
 		Rainbowduino rainbowduino = RainbowduinoDetector.init(_app).detectRainbowudino();
 		String portName = rainbowduino.getPortName();
-		rainbowduino.dispose();
+		rainbowduino.close(); //close port
 		return portName;		 
 	}	
 
@@ -37,6 +51,17 @@ public class RainbowduinoDetector {
 		checked_ports = new Vector<String>();
 		listeners = new Vector<RainbowduinoListener>();
 		addListener(new RainbowduinoPAppletListener(_app));		
+	}
+
+	public void run() {
+		while(running) {
+			PApplet.println("check");
+			Rainbowduino rainbowduino = detectRainbowudino();
+			if(rainbowduino != null) registerRainbowduino(rainbowduino);
+			PApplet.println("done");
+			this.sleep(5000);			
+		}
+		PApplet.println("stopped");
 	}
 
 	/* -- Listener Handling -- */
@@ -89,9 +114,7 @@ public class RainbowduinoDetector {
 			if(checked_ports.contains(ports[i])) continue; //it's already checked
 			checked_ports.add(ports[i]);
 			if(PApplet.match(ports[i], "tty") == null) continue;			
-			return openRainbowduino(ports[i]);
-			//PApplet.println(ports[i]);
-			//TODO now, as one rainbwoudino is found, update thread time				
+			return openRainbowduino(ports[i]);			
 		}
 		return null;
 	}
@@ -107,25 +130,27 @@ public class RainbowduinoDetector {
 	 * @return whether port could be opened sucessfully 
 	 */
 	private Rainbowduino openRainbowduino(String portName) {
-		if(portName == null) return null;		
+		if(portName == null) return null;
+		PApplet.println(portName);
 		try {			
 			Rainbowduino rainbowduino = new Rainbowduino(this.app, portName);
-			sleep(3000); //give Rainbowduino time to initialize			
+			sleep(this.thread_sleep); //give Rainbowduino time to initialize			
 			if(rainbowduino.ping()) return rainbowduino;
-			PApplet.println("No response");							
+			PApplet.println("No response " + portName);							
 		}
 		catch (Exception e) {
-			PApplet.println("Error port");
+			PApplet.println("Error port " + portName);
 		}       							
 		return null;
 	}
 
 	void registerRainbowduino(Rainbowduino rainbowduino) {
-		app.registerDispose(rainbowduino);
 		//TODO add to Rainbowudino list
 		for(RainbowduinoListener listener : listeners) {				 
 			listener.rainbowuinoAvailable(rainbowduino);
-		}				
+		}	
+		//now, as rainbowudino is found, lower polling time
+		this.thread_sleep = THREAD_SLEEP;
 	}
 
 	private void sleep(int ms) {

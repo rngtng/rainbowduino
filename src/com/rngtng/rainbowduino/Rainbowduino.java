@@ -60,7 +60,12 @@ public class Rainbowduino  implements RCodes {
 
 	public Rainbowduino(PApplet _app, String portName) {
 		this.app = _app;
-		openPort(portName);		
+		app.registerDispose(this);
+		openPort(portName);	
+	}
+
+	public void close() {
+		dispose();
 	}
 
 	public void dispose() {
@@ -89,7 +94,7 @@ public class Rainbowduino  implements RCodes {
 	 */
 	public boolean uploadFirmware() {	
 		if(!connected()) return false;
-		
+
 		this.port.stop();
 		if(uploadFirmware( this.getPortName(), this.UPLOAD_BAUDRATE) ) {
 			sleep(3000);
@@ -421,7 +426,7 @@ public class Rainbowduino  implements RCodes {
 			port.buffer(20);
 			return true;
 		}
-		catch (Exception e) {
+		catch (RuntimeException e) {
 			PApplet.println("Error port");
 		}
 		return false;
@@ -429,7 +434,14 @@ public class Rainbowduino  implements RCodes {
 
 	private void send(int value) {
 		if(!connected()) return;
-		port.write(value);
+		try {
+			port.write(value);
+		}
+		//catch(gnu.io.PortInUseException e) {
+		//}
+		catch(RuntimeException e) {
+			PApplet.println( getPortName());
+		}
 	}
 
 	private int waitAndReadSerial() throws RainbowduinoTimeOut {
@@ -468,5 +480,20 @@ public class Rainbowduino  implements RCodes {
 			PApplet.println("Error happend: " + this.error);
 		}		
 	}
+
+	/******************* deprecated Stuf ************************************/
+	public void initPort() {
+		this.initPort(null, 0, true);
+	}
+
+	public void initPort(int _baud) {
+		this.initPort(null, _baud, true);
+	}    
+
+	public boolean initPort(String port_name, int _baud, boolean check) {
+		PApplet.println("initPort() is deprectated and not needed anymore, just delete the line");
+		return true;
+	}	
+
 
 }
