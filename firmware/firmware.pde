@@ -6,6 +6,9 @@
 
 #include <EEPROM.h>
 
+#include <Wire.h> //needed for connection
+#include "Connection.h"
+
 #include <MsTimer2.h>
 
 /* 
@@ -14,8 +17,6 @@
  * and remove those links
  */
 #include "Rainbowduino.h"
-#include "Master.h"
-#include "Slave.h"
 #include "RCodes.h" //API Codes
 
 #define BAUD_RATE 57600
@@ -82,6 +83,7 @@ void execute() {
   if(!Con.available() || Con.read() != COMMAND) return;
   byte command = Con.read();
   byte return_value = 0;
+  byte param = 0;
   switch(command) {
       /* Basic Control */
     case PING:
