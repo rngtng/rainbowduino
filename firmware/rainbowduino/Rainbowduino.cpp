@@ -20,19 +20,19 @@ RainbowduinoDriver Rainbowduino;
 
 
 // wrapper fnc to call rawing method, maybe use member function pointer instead?
-void draw_interrupt() {
+void draw_callback() {
     Rainbowduino.draw();
 }
 
 ///////////////////////////////////////////////////////////////////////
 // Initializer to init Timer, IO and starting values 
 // for some reasons, this cant be writien as constructor.
-void RainbowduinoDriver::initialize() {
+void RainbowduinoDriver::begin() {
   
   //setup up timer  
   long period = 1000000 / FRAME_HZ / NUM_LINES / NUM_LEVEL;
-  Timer1.initialize( period);
-  Timer1.attachInterrupt(draw_interrupt);  // attaches callback() as a timer overflow interrupt      
+  Timer1.initialize(period);
+  Timer1.attachInterrupt(draw_callback);  // attaches callback() as a timer overflow callback      
   
   //setups IO 
   DDRD = 0xff;

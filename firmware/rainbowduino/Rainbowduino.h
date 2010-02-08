@@ -4,6 +4,16 @@
  * Copyright (c) 2010 Tobias Bielohlawek -> http://www.rngtng.com
  *
  */
+ 
+/* wihlist:
+  * cascading serial + reset
+  * debug LED
+  * row selector one PORT (instead of 2 partly selected)
+  * cascading external battery
+  * onboard USB
+  * easier get matrix
+  * VCC on but LED power off => no Power LED burning as not functional
+*/
 
 #ifndef RAINBOWDUINO_h
 #define RAINBOWDUINO_h
@@ -46,7 +56,7 @@ public:
   byte frame_buffer[NUM_ROWS*MAX_NUM_FRAMES]; // [FRAME_BUFFER_SIZE]; //size of EEPROM -> to read faster??
   byte level;
     
-  void initialize();
+  void begin();
   void reset();
 
   byte get_num_frames();
