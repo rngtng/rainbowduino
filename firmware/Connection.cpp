@@ -1,22 +1,24 @@
 /*
 */
-#include "WProgram.h"
-#include <Wire.h>
-
 #include "Connection.h"
+
+#include "WProgram.h"
+
+#include <EEPROM.h>
+#include "Wire.h"
 
 Connection Con;
 
 
 void receive_register_response(int howMany) {
   if( Wire.receive() == I2C_CMD_OK) {  //TODO send explizit -set address- command
-    Connection.i2c_address = Wire.receive();
+    Con.i2c_address = Wire.receive();
   }
 }
 
 void receive_register_request(int howMany) {
-  if(Wire.receive() = I2C_CMD_HELLO) {
-    Connection.register_slave( Wire.receive() );
+  if(Wire.receive() == I2C_CMD_HELLO) {
+    //Con.register_slave( Wire.receive() );
   }
 }
 
@@ -24,7 +26,12 @@ void receive_command(int howMany) {
   
 }
 
-Connection::begin() { //TODO I2C & Serail callback FNC ??
+
+void Connection::begin() { //TODO I2C & Serail callback FNC ??
+  master = false;
+  serial = false;
+  i2c_address = 0;
+  last_slave_address = 0;
   //TODO serial = _serial;
   //TODO baud_rate = _baud_rate;
   
@@ -47,7 +54,7 @@ Connection::begin() { //TODO I2C & Serail callback FNC ??
   while( i2c_address >= I2C_START_ADR && c > 0) {  
     // 5a. make call to master with static number.
     Wire.beginTransmission(I2C_MASTER_ADR);
-    Wire.send(I2C_HELLO);
+    Wire.send(I2C_CMD_HELLO);
     Wire.send(i2c_address);   //send adress where to respond to
     Wire.endTransmission();
   
@@ -62,9 +69,10 @@ Connection::begin() { //TODO I2C & Serail callback FNC ??
   }
   else { // failure
     //6b. use master I2C address, start master mode, open serial
-    Serial.begin(BAUD_RATE);
+    Serial.begin(BAUD_RATE);    
     i2c_address = I2C_MASTER_ADR;
     Wire.onReceive(receive_register_request);
+    serial = true;
     master = true;
   }
 
@@ -76,40 +84,50 @@ Connection::begin() { //TODO I2C & Serail callback FNC ??
   
 }
 
-int Connection::receive(int data) {
-  return (master) ? Serial.read() : Wire.receive();
+byte Connection::receive() {
+  return (serial) ? Serial.read() : Wire.receive();
 }
 
-int Connection::send(int data) {
-  if(serial) {
-    Serial.write(data);
-  }
-  else {
-    Wire.send(data);
-  }
+byte Connection::read() {
+  return receive();
 }
 
-Connection::available() {
-  if(serial) {
-    return Serial.available();
-  }
-  else {
-    Wire.available();
-  }
-  
+
+byte Connection::wait_and_read() {
+ //TODO add timeout + error???
+ while( !available() );
+ return read();
 }
 
-// void Connection::beginTransmission(byte channel) {
-//   if(!serial) {
-//     Wire.beginTransmission(channel);
-//   }
-// }
-// 
-// void Connection::endTransmission() {
-//   if(!serial) {
-//     Wire.endTransmission();
-//   }
-// }
+void Connection::send(int data) {
+  (serial) ? Serial.write(data) : Wire.send(data);
+}
+
+void Connection::write(int data) {
+  send(data);
+}
+
+byte Connection::available() {
+  return (serial) ? Serial.available() : Wire.available();
+}
+
+void Connection::beginTransmission(byte channel) {
+  if(!serial) Wire.beginTransmission(channel);
+}
+
+void Connection::endTransmission() {
+  if(!serial) Wire.endTransmission();
+}
+
+void Connection::ok(byte command, byte param) {  
+   //Serial.flush();
+   beginTransmission(I2C_MASTER_ADR);
+   write(I2C_CMD_OK);
+   write(command);
+   write(param);
+   endTransmission();
+}
+
 
 /*
 struct message {
@@ -122,20 +140,13 @@ struct message {
 ///////////////////////////////////////////////////////////////////////////
 // Serial Stuff
 //
-byte _read() {
-  return (serial) = Serial.read();
-}
+// byte _read() {
 
-byte read() {
-  //TODO add timeout + error???
-  while( !Serial.available() );
-  return _read();
-}
+//   return (serial) = Serial.read();
 
-boolean ok(byte command, byte param) {
-  Serial.flush();
-  Serial.write(OK);
-  Serial.write(command);
-  Serial.write(param);
-}
+// }
+
+// 
+
+
 
