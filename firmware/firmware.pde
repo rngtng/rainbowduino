@@ -23,6 +23,8 @@
 #define SPEED_FACTOR 100 //ms
 #define DEFAULT_FRAME_DELAY 10 // * 100ms => 1s
 
+#define EEPROM_START 10 //0 is reserved, user sth > 0
+
 //running mode
 byte running;
 long frame_delay;
@@ -31,16 +33,16 @@ long frame_delay;
 // Main
 //
 void setup() {
-  Serial.begin(BAUD_RATE);
-  Rainbowduino.initialize();
+  Rainbowduino.begin();
+  Con.begin();
   
   reset();
-  load_from_eeprom(0);
+  load_from_eeprom();
   start();
 }
 
 void loop() {
-  check_serial();
+  execute();  
 }
 
 ///////////////////////////////////////////////////
@@ -62,13 +64,13 @@ void stop() {
   MsTimer2::stop();
 }
 
-void next_frame_interrupt() {  
+void next_frame_callback() {  
    Rainbowduino.next_frame();
 }
 
 void set_frame_delay(long frame_delay_value) {
   frame_delay = frame_delay_value * SPEED_FACTOR;
-  MsTimer2::set(frame_delay, next_frame_interrupt); // 500ms period
+  MsTimer2::set(frame_delay, next_frame_callback); // 500ms period
 
   frame_delay = frame_delay_value;
 }
@@ -76,125 +78,97 @@ void set_frame_delay(long frame_delay_value) {
 ///////////////////////////////////////////////////
 // API Stuff
 //
-void check_serial() {
-  if(!Serial.available()) return;
-  byte received = read_serial();
-  byte param;
-  if(received == COMMAND) {
-    received = wait_and_read_serial();
-    switch(received) {
+void execute() {
+  if(!Con.available() || Con.read() != COMMAND) return;
+  byte command = Con.read();
+  byte return_value = 0;
+  switch(command) {
       /* Basic Control */
     case PING:
     case API_VERSION:
-      ok(received, API_VERSION_NR);
+      return_value = API_VERSION_NR;
       break;
 
     case RESET:
-      load_from_eeprom(0);
+      load_from_eeprom();
       reset();
-      ok(received, Rainbowduino.get_current_frame_nr());
+      return_value = Rainbowduino.get_current_frame_nr();
       break;
     case STOP:
       running = false;
-      ok(received, Rainbowduino.get_current_frame_nr());
+      return_value = Rainbowduino.get_current_frame_nr();
       break;
     case START:
       running = true;
-      ok(received, Rainbowduino.get_current_frame_nr());
+      return_value = Rainbowduino.get_current_frame_nr();
       break;            
     case FRAME_SET:
-      Rainbowduino.set_current_frame_nr(wait_and_read_serial());
-      ok(received, Rainbowduino.get_current_frame_nr());
-      break;
+      Rainbowduino.set_current_frame_nr(Con.read());
     case FRAME_GET:
-      ok(received, Rainbowduino.get_current_frame_nr());
+      return_value = Rainbowduino.get_current_frame_nr();
       break;
 
       /* Brightness Control */
     case BRIGHTNESS_SET:
-      Rainbowduino.level = wait_and_read_serial();
-      ok(received, Rainbowduino.level);
-      break;
+      Rainbowduino.level = Con.read();
     case BRIGHTNESS_GET:
-      ok(received, Rainbowduino.level);
+      return_value = Rainbowduino.level;
       break;
 
       /* Buffer Control */
     case BUFFER_SET_AT:
-      param = wait_and_read_serial(); //read adress value
-      ok(received, NUM_ROWS);
+      param = Con.read(); //read adress value
+      return_value = NUM_ROWS;
       for(byte row = 0; row < NUM_ROWS; row++) {
-        Rainbowduino.set_frame_row(param, row, wait_and_read_serial());
+        Rainbowduino.set_frame_row(param, row, Con.read());
       }
       break;
     case BUFFER_GET_AT:
-      param = wait_and_read_serial(); //read adress value
-      ok(received, NUM_ROWS);
+      param = Con.read(); //read adress value
+      return_value = NUM_ROWS;
       for(byte row = 0; row < NUM_ROWS; row++) {
-        Serial.write(Rainbowduino.get_frame_row(param, row));
+        Con.write(Rainbowduino.get_frame_row(param, row));
       }
       break;
-    case BUFFER_LENGTH:      
-      ok(received, Rainbowduino.get_num_frames());
-      break;
     case BUFFER_SAVE:    
-      save_to_eeprom(0);   
-      ok(received, Rainbowduino.get_num_frames());
+      save_to_eeprom(); 
+      return_value = Rainbowduino.get_num_frames();
       break;      
     case BUFFER_LOAD:      
-      load_from_eeprom(0);
-      ok(received, Rainbowduino.get_num_frames());
-      break;      
+      load_from_eeprom();
+    case BUFFER_LENGTH:      
+      return_value = Rainbowduino.get_num_frames();
+      break;            
 
       /* Speed Control */
     case SPEED_SET:
-      param = wait_and_read_serial(); //read speed value
-      set_frame_delay(param);
-      ok(received, frame_delay);
-      break;
+      set_frame_delay(Con.read());
     case SPEED_GET:
-      ok(received, frame_delay);
+      return_value = frame_delay;
       break;
     case SPEED_INC: 
       if(frame_delay > SPEED_FACTOR) frame_delay -= SPEED_FACTOR;
       set_frame_delay(frame_delay);
-      ok(received, frame_delay);
+      return_value = frame_delay;
       break;
     case SPEED_DEC:  
       frame_delay += SPEED_FACTOR;
       set_frame_delay(frame_delay);
-      ok(received, frame_delay);
+      return_value = frame_delay;
       break;    
     default:
       //send error
     break;
     }
-  }
+    Con.ok(command, return_value);
 }
 
-///////////////////////////////////////////////////////////////////////////
-// Serial Stuff
-//
-byte read_serial() {
-  return Serial.read();
-}
-
-byte wait_and_read_serial() {
-  while( !Serial.available() );
-  return read_serial();
-}
-
-boolean ok(byte command, byte param) {
-  Serial.flush();
-  Serial.write(OK);
-  Serial.write(command);
-  Serial.write(param);
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // EEPROM Stuff
 //
-void save_to_eeprom(word addr) {
+void save_to_eeprom() {
+  word addr = EEPROM_START;
   word num_frames = Rainbowduino.get_num_frames();
   EEPROM.write(addr++, num_frames);
   for( word frame_nr = 0; frame_nr < num_frames; frame_nr++ ) {
@@ -204,8 +178,8 @@ void save_to_eeprom(word addr) {
   }
 }
 
-
-void load_from_eeprom(word addr) {
+void load_from_eeprom() {
+  word addr = EEPROM_START;
   word num_frames = EEPROM.read(addr++);
   for( word frame_nr = 0; frame_nr < num_frames; frame_nr++ ) {
     for( byte row = 0; row < NUM_ROWS; row++ ) {
