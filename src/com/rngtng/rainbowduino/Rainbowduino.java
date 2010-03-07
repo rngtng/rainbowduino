@@ -179,8 +179,7 @@ public class Rainbowduino  implements RCodes {
 	 * @param frame_pos number of frame to set to
 	 */
 	public void frameSet(int frame_pos) {
-		sendCommand(FRAME_SET);
-		sendParam(frame_pos);
+		sendCommand(FRAME_SET, frame_pos);		
 	}
 
 	/**
@@ -201,8 +200,7 @@ public class Rainbowduino  implements RCodes {
 	 * Sets the brightness value
 	 */
 	public void brightnessSet(int brightness) {
-		sendCommand(BRIGHTNESS_SET);
-		sendParam(brightness);
+		sendCommand(BRIGHTNESS_SET, brightness);		
 	}
 
 	/**
@@ -234,8 +232,7 @@ public class Rainbowduino  implements RCodes {
 	 */
 	public void bufferSetAt(int adr, int[] content, boolean check) {	   
 		try {
-			sendCommand(BUFFER_SET_AT);
-			sendParam(adr);
+			sendCommand(BUFFER_SET_AT, adr, content.length + 2);
 			if(check) {
 				int accepted_size = receive(BUFFER_SET_AT); 
 				if(content.length != accepted_size) throw new RainbowduinoError(ERROR_MISSMATCH);
@@ -254,8 +251,7 @@ public class Rainbowduino  implements RCodes {
 	 */
 	public int[] bufferGetAt(int adr) {	 		
 		try {
-			sendCommand(BUFFER_GET_AT);
-			sendParam(adr);
+			sendCommand(BUFFER_GET_AT, adr);
 			int size = receive(BUFFER_GET_AT);
 			PApplet.println("Size :" + size);
 			int[] content = new int[size];
@@ -311,8 +307,7 @@ public class Rainbowduino  implements RCodes {
 	 * sets speed to given value
 	 */
 	public void speedSet(int speed_value) {
-		sendCommand(SPEED_SET);
-		sendParam(speed_value);
+		sendCommand(SPEED_SET, speed_value);
 	}
 
 	/**
@@ -347,16 +342,14 @@ public class Rainbowduino  implements RCodes {
 	 * sets speed to given value
 	 */
 	public void slaveActiv(int slave_nr) {
-		sendCommand(SLAVE_ACTIV);
-		sendParam(slave_nr);
+		sendCommand(SLAVE_ACTIV, slave_nr);	
 	}
 
 	/**
 	 * sets speed to given value
 	 */
 	public void slaveNrSet(int slave_nr) {
-		sendCommand(SLAVE_NR_SET);
-		sendParam(slave_nr);
+		sendCommand(SLAVE_NR_SET, slave_nr);
 	}
 
 	/**
@@ -373,19 +366,26 @@ public class Rainbowduino  implements RCodes {
 	}	
 
 	/* +++++++++++++++++++ */
-	private void sendCommand(int command_code) {		
+	private void sendCommand(int commandCode) {
+		sendCommand(commandCode, 666, 1);
+	}
+	
+	private void sendCommand(int commandCode, int param) {
+		sendCommand(commandCode, param, 2);
+	}
+	
+	private void sendCommand(int commandCode, int param, int length) {		
 		//init command			
 		send(COMMAND);
+		//send length		 
+		send(length);
+		
 		//flush buffer		
 		if( connected() ) port.clear();		
 		//send command
-		send(command_code);
+		send(commandCode);
+		if(length > 1) send(param);
 		sleep(10);
-	}
-
-	private void sendParam(int param) {
-		//send param			
-		send(param);						
 	}
 
 	private int receive(int command) throws RainbowduinoError {		

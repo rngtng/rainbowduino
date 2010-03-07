@@ -2,7 +2,7 @@ package com.rngtng.rainbowduino;
 
 public interface RCodes {
 
-	public final static int API_VERSION_NR = 1;
+	public final static int API_VERSION_NR = 2;
 	
 	/* init code */
 	public final static int COMMAND     = 255;

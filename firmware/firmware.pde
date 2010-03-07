@@ -43,8 +43,6 @@ void setup() {
 
 void loop() {
   while ( Serial.available() ) Con.process( Serial.read() );
-  
-  //execute3(7, 255, 200);
 }
 
 ///////////////////////////////////////////////////
@@ -163,7 +161,7 @@ void execute() {
       //send error
     break;
     }
-    //Con.ok(command, return_value);
+    Con.ok(command, return_value);
 }
 
 
@@ -189,27 +187,4 @@ void load_from_eeprom() {
       Rainbowduino.set_frame_row(frame_nr, row, EEPROM.read(addr++));
     }
   }
-}
-
-
-
-
-
-void execute2() {
-  byte x = Con.read();
-  byte y = Con.read();
-  byte c = Con.read();
-  Rainbowduino.set_frame_pixel(0,x, y, c, 0,0);
-}
-
-bool on3 = false;
-void execute3(int x, int c, int delays) {
-  if(on3) {
-    Rainbowduino.set_frame_line(0,x,c,0,0);
-  }
-  else {
-    Rainbowduino.set_frame_line(0,x,0,c,0);
-  }
-  on3 = !on3;
-  delay(delays);
 }
