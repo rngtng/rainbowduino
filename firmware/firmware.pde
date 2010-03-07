@@ -19,8 +19,6 @@
 #include "Rainbowduino.h"
 #include "RCodes.h" //API Codes
 
-#define BAUD_RATE 57600
-
 #define SPEED_FACTOR 100 //ms
 #define DEFAULT_FRAME_DELAY 10 // * 100ms => 1s
 
@@ -35,7 +33,8 @@ long frame_delay;
 //
 void setup() {
   Rainbowduino.begin();
-  Con.begin();
+  Con.beginMaster();
+  Con.onMessageAvailable(execute);
   
   reset();
   load_from_eeprom();
@@ -43,7 +42,9 @@ void setup() {
 }
 
 void loop() {
-  execute();  
+  while ( Serial.available() ) Con.process( Serial.read() );
+  
+  //execute3(7, 255, 200);
 }
 
 ///////////////////////////////////////////////////
@@ -65,7 +66,7 @@ void stop() {
   MsTimer2::stop();
 }
 
-void next_frame_callback() {  
+void next_frame_callback() {
    Rainbowduino.next_frame();
 }
 
@@ -76,11 +77,11 @@ void set_frame_delay(long frame_delay_value) {
   frame_delay = frame_delay_value;
 }
 
+
 ///////////////////////////////////////////////////
 // API Stuff
 //
 void execute() {
-  if(!Con.available() || Con.read() != COMMAND) return;
   byte command = Con.read();
   byte return_value = 0;
   byte param = 0;
@@ -162,7 +163,7 @@ void execute() {
       //send error
     break;
     }
-    Con.ok(command, return_value);
+    //Con.ok(command, return_value);
 }
 
 
@@ -190,3 +191,25 @@ void load_from_eeprom() {
   }
 }
 
+
+
+
+
+void execute2() {
+  byte x = Con.read();
+  byte y = Con.read();
+  byte c = Con.read();
+  Rainbowduino.set_frame_pixel(0,x, y, c, 0,0);
+}
+
+bool on3 = false;
+void execute3(int x, int c, int delays) {
+  if(on3) {
+    Rainbowduino.set_frame_line(0,x,c,0,0);
+  }
+  else {
+    Rainbowduino.set_frame_line(0,x,0,c,0);
+  }
+  on3 = !on3;
+  delay(delays);
+}
