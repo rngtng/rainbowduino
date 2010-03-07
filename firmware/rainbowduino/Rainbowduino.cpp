@@ -115,7 +115,7 @@ void RainbowduinoDriver::set_frame_pixel(byte frame_nr, byte x, byte y, byte red
 void RainbowduinoDriver::draw() {
   if(num_frames == 0) return; //no frames available
   off = current_frame_nr * NUM_ROWS + current_row;
-  draw_row(current_row / 3, level, frame_buffer[off++], frame_buffer[off++], frame_buffer[off++]);
+  draw_row(current_row / 3, level, frame_buffer[off++], frame_buffer[off++], frame_buffer[off]);
   if(current_row >= NUM_ROWS - 1) {
     current_row =  0;
     current_level = (current_level >= NUM_LEVEL - 1) ? 0 : current_level+1;    
