@@ -95,19 +95,19 @@ byte RainbowduinoDriver::get_frame_row(byte frame_nr, byte row) {
 
 void RainbowduinoDriver::set_frame_line(byte frame_nr, byte x, byte red, byte green, byte blue) {
   if(frame_nr >= MAX_NUM_FRAMES) return;
-  word offset = frame_nr * NUM_ROWS;
-  frame_buffer[offset+x]   = blue;
-  frame_buffer[offset+x+1] = red;
-  frame_buffer[offset+x+2] = green;
+  word offset = frame_nr * NUM_ROWS + x * 3;
+  frame_buffer[offset  ] = red;
+  frame_buffer[offset+1] = green;
+  frame_buffer[offset+2] = blue;
   if(frame_nr >= num_frames) num_frames = frame_nr + 1;
 }
 
 void RainbowduinoDriver::set_frame_pixel(byte frame_nr, byte x, byte y, byte red, byte green, byte blue) {
   if(frame_nr >= MAX_NUM_FRAMES) return;
-  word offset = frame_nr * NUM_ROWS;
-  frame_buffer[offset+x  ] = (blue  > 0) ? frame_buffer[offset+x]   | (1<<y) : frame_buffer[offset+x]   & ~(1<<y);
-  frame_buffer[offset+x+1] = (red   > 0) ? frame_buffer[offset+x+1] | (1<<y) : frame_buffer[offset+x+1] & ~(1<<y);
-  frame_buffer[offset+x+2] = (green > 0) ? frame_buffer[offset+x+1] | (1<<y) : frame_buffer[offset+x+2] & ~(1<<y);
+  word offset = frame_nr * NUM_ROWS + x * 3;
+  frame_buffer[offset  ] = (red   > 0) ? frame_buffer[offset  ] | (1<<y) : frame_buffer[offset  ] & ~(1<<y);
+  frame_buffer[offset+1] = (green > 0) ? frame_buffer[offset+1] | (1<<y) : frame_buffer[offset+1] & ~(1<<y);
+  frame_buffer[offset+2] = (blue  > 0) ? frame_buffer[offset+2] | (1<<y) : frame_buffer[offset+2] & ~(1<<y);
   if(frame_nr >= num_frames) num_frames = frame_nr + 1;
 }
 
@@ -126,7 +126,7 @@ void RainbowduinoDriver::draw() {
 }
 
 //--- colors to shift: blue, red,  green 
-void RainbowduinoDriver::draw_row(byte row, byte level, byte r, byte b, byte g) {
+void RainbowduinoDriver::draw_row(byte row, byte level, byte r, byte g, byte b) {
   disable_oe;
   enable_row(row);
   le_high;

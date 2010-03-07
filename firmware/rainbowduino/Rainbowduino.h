@@ -89,7 +89,7 @@ private:
   volatile byte current_row;
   volatile byte current_level;
 
-  void draw_row(byte row, byte level, byte r, byte b, byte g);
+  void draw_row(byte row, byte level, byte r, byte g, byte b);
   void draw_color(byte c);
   void enable_row(byte row);
 };
