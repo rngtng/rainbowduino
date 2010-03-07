@@ -7,7 +7,7 @@
 #define RCODES_h
 
 ////////////// API COMMANDS ///////////////////////
-#define API_VERSION_NR 1
+#define API_VERSION_NR 2
 
 /* init code */
 #define COMMAND     255

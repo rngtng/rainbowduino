@@ -114,8 +114,9 @@ uint8_t Connection::process(byte serialByte) {
     return 0;
   }
 
-  if( messageAwaiting && inputBufferLength == 0 ) { //todo what ifmessagesize > 0 ???
+  if( messageAwaiting && inputBufferLength == 0 ) {
     inputBufferLength = serialByte;
+    //TODO waht if message siez > allowed msg SIZE???
     return 1;
   }
 
@@ -157,4 +158,11 @@ uint8_t Connection::available() {
 
 
 void Connection::write(int w) {
+}
+
+void Connection::ok(byte command, byte param) {
+  Serial.flush();
+  Serial.write(MESSAGE_OK);
+  Serial.write(command);
+  Serial.write(param);
 }
