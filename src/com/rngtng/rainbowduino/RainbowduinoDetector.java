@@ -148,7 +148,7 @@ public class RainbowduinoDetector extends Thread {
 	 * 
 	 * @param portName port to open
 	 * @param check whether to perform valid checks
-	 * @return whether port could be opened sucessfully 
+	 * @return whether port could be opened successfully 
 	 */
 	private Rainbowduino openRainbowduino(String portName) {
 		if(portName == null) return null;
@@ -168,7 +168,7 @@ public class RainbowduinoDetector extends Thread {
 
 		rainbowduinos.add(rainbowduino);
 		for(RainbowduinoListener listener : listeners) {				 
-			listener.rainbowuinoAvailable(rainbowduino);
+			listener.rainbowduinoAvailable(rainbowduino);
 		}			
 
 		//now, as rainbowudino is found, lower polling time
@@ -179,7 +179,7 @@ public class RainbowduinoDetector extends Thread {
 		if(!rainbowduinos.contains(rainbowduino)) return;
 
 		for(RainbowduinoListener listener : listeners) {				 
-			listener.rainbowuinoUnavailable(rainbowduino);
+			listener.rainbowduinoUnavailable(rainbowduino);
 		}	
 		checked_ports.remove(rainbowduino.getPortName());
 		rainbowduinos.remove(rainbowduino);

@@ -9,7 +9,7 @@ package com.rngtng.rainbowduino;
 
 public interface RainbowduinoListener {
     
-    public void rainbowuinoAvailable(Rainbowduino rainbowduino);
-    public void rainbowuinoUnavailable(Rainbowduino rainbowduino);
+    public void rainbowduinoAvailable(Rainbowduino rainbowduino);
+    public void rainbowduinoUnavailable(Rainbowduino rainbowduino);
     
 }

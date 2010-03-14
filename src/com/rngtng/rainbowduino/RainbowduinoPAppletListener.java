@@ -45,6 +45,7 @@ public class RainbowduinoPAppletListener implements RainbowduinoListener {
 		getMethods(app);
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void getMethods(Object parent) {
 		Class[] argsButton = new Class[] {Rainbowduino.class};
 		try {
@@ -59,7 +60,7 @@ public class RainbowduinoPAppletListener implements RainbowduinoListener {
 		}
     }
 
-	public void rainbowuinoAvailable(Rainbowduino rainbowudino) {
+	public void rainbowduinoAvailable(Rainbowduino rainbowudino) {
 		if (availableMethod == null) return;			
 		try {
 			availableMethod.invoke(app, new Object[]{ rainbowudino });
@@ -72,7 +73,7 @@ public class RainbowduinoPAppletListener implements RainbowduinoListener {
 		}   
 	}
 
-	public void rainbowuinoUnavailable(Rainbowduino rainbowudino) {
+	public void rainbowduinoUnavailable(Rainbowduino rainbowudino) {
 		if (unavailableMethod == null) return;			
 		try {
 			unavailableMethod.invoke(app, new Object[]{ rainbowudino });
