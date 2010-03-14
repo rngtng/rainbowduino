@@ -60,10 +60,10 @@ public class RainbowduinoPAppletListener implements RainbowduinoListener {
 		}
     }
 
-	public void rainbowduinoAvailable(Rainbowduino rainbowudino) {
+	public void rainbowduinoAvailable(Rainbowduino rainbowduino) {
 		if (availableMethod == null) return;			
 		try {
-			availableMethod.invoke(app, new Object[]{ rainbowudino });
+			availableMethod.invoke(app, new Object[]{ rainbowduino });
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
@@ -73,10 +73,10 @@ public class RainbowduinoPAppletListener implements RainbowduinoListener {
 		}   
 	}
 
-	public void rainbowduinoUnavailable(Rainbowduino rainbowudino) {
+	public void rainbowduinoUnavailable(Rainbowduino rainbowduino) {
 		if (unavailableMethod == null) return;			
 		try {
-			unavailableMethod.invoke(app, new Object[]{ rainbowudino });
+			unavailableMethod.invoke(app, new Object[]{ rainbowduino });
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
