@@ -49,10 +49,6 @@ public interface RCodes {
 	public final static int SPEED_INC   = 224; //returns OK + speed value
 	public final static int SPEED_DEC   = 222; //returns OK + speed value
 	
-	public final static int SLAVE_NR_SET = 208; //returns OK + slave number
-	public final static int SLAVE_NR_GET = 206; //returns OK + slave number
-	public final static int SLAVE_ACTIV  = 204; //returns OK + slave number
-	
 	public final static int SLAVE_NEW  = 202; //returns OK + slave number
 		
 	public final static int ERROR_TIME_OUT   = 255; // followed by error code

@@ -65,10 +65,13 @@ public class Rainbowduino implements RCodes {
 	public Rainbowduino(PApplet _app, String portName) {
 		this.app = _app;
 		app.registerDispose(this);
-		openPort(portName);
-		this.master = this;
-		this.slaveNr = 0;
-
+		if( openPort(portName) ) {
+			this.master = this;
+			this.slaveNr = 0;
+		}
+		else {
+			//stand alone
+		}
 	}
 
 	public Rainbowduino(Rainbowduino _master, int _slaveNr) {
@@ -254,7 +257,7 @@ public class Rainbowduino implements RCodes {
 		int[] data = new int[content.length + 1];
 		data[0] = adr;
 		for(int k = 0; k < content.length; k++) {
-		   data[k+1] = content[k]; 
+			data[k+1] = content[k]; 
 		}
 		sendCommand(BUFFER_SET_AT, data);
 	}
@@ -352,34 +355,6 @@ public class Rainbowduino implements RCodes {
 	}
 
 	/* +++++++++++++++++++ */
-	/**
-	 * sets speed to given value
-	 */
-	public void slaveActiv(int slave_nr) {
-		sendCommand(SLAVE_ACTIV, slave_nr);	
-	}
-
-	/**
-	 * sets speed to given value
-	 */
-	public void slaveNrSet(int slave_nr) {
-		sendCommand(SLAVE_NR_SET, slave_nr);
-	}
-
-	/**
-	 * @return current speed
-	 */
-	public int slaveNrGet() {	   
-		try {
-			sendCommand(SLAVE_NR_GET);
-			return receive(SLAVE_NR_GET);
-		} catch (RainbowduinoError e) {
-			e.print();
-		}
-		return 0;
-	}	
-
-	/* +++++++++++++++++++ */
 	private void sendCommand(int commandCode) {
 		master.sendMessage(slaveNr, commandCode, null);
 	}
@@ -391,7 +366,7 @@ public class Rainbowduino implements RCodes {
 	private void sendCommand(int commandCode, int[] data) {		
 		master.sendMessage(slaveNr, commandCode, data);
 	}	
-	
+
 	private void sendMessage(int receiverNr, int commandCode, int[] data) {		
 		//init command
 		this.responseMessage = null;
@@ -401,7 +376,7 @@ public class Rainbowduino implements RCodes {
 		send(receiverNr);
 
 		//flush buffer		//TODO why this here??
-//		if( isConnected() ) serialPort.clear();		
+		//		if( isConnected() ) serialPort.clear();		
 
 		//send length
 		int length = 1; 
@@ -453,7 +428,8 @@ public class Rainbowduino implements RCodes {
 	 * @param check whether to perform valid checks
 	 * @return whether port could be opened sucessfully 
 	 */
-	private boolean openPort(String portName) {		
+	private boolean openPort(String portName) {	
+		if( portName == null) return false;
 		try {
 			serialPort = new RainbowduinoSerial(this, portName, BAUDRATE);
 			return true;
