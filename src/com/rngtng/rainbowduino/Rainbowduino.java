@@ -24,10 +24,9 @@ package com.rngtng.rainbowduino;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-import com.rngtng.arduinoloader.ArduinoLoader;
-
 import processing.core.PApplet;
-import processing.serial.Serial;
+
+import com.rngtng.arduinoloader.ArduinoLoader;
 
 /**
  * 
@@ -35,7 +34,7 @@ import processing.serial.Serial;
  * @author rngtng - Tobias Bielohlawek
  *
  */
-public class Rainbowduino  implements RCodes {
+public class Rainbowduino implements RCodes {
 
 	public final int UPLOAD_BAUDRATE = 19200;	
 	public final int BAUDRATE = 57600;	
@@ -44,10 +43,15 @@ public class Rainbowduino  implements RCodes {
 	public final String VERSION = "0.2";
 
 	PApplet app;
-	Serial port;
+	RainbowduinoSerial serialPort;
 
 	public static int width = 8;
-	public static int height = width;	
+	public static int height = width;
+
+	public Rainbowduino master = null;	
+	public int slaveNr = 0;
+
+	RainbowduinoMessage responseMessage = null;	
 
 	/**
 	 * Create a new instance to communicate with the rainbowduino. Make sure to (auto)init the serial port, too 
@@ -61,8 +65,16 @@ public class Rainbowduino  implements RCodes {
 	public Rainbowduino(PApplet _app, String portName) {
 		this.app = _app;
 		app.registerDispose(this);
-		openPort(portName);	
+		openPort(portName);
+		this.master = this;
+		this.slaveNr = 0;
+
 	}
+
+	public Rainbowduino(Rainbowduino _master, int _slaveNr) {
+		this.master = _master;
+		this.slaveNr = _slaveNr;
+	}	
 
 	public void close() {
 		app.unregisterDispose(this);
@@ -70,8 +82,8 @@ public class Rainbowduino  implements RCodes {
 	}
 
 	public void dispose() {
-		if(connected()) port.stop();
-		port = null;		
+		if(isConnected()) serialPort.stop();
+		serialPort = null;		
 	}
 
 	/**
@@ -86,17 +98,25 @@ public class Rainbowduino  implements RCodes {
 	/**
 	 * @return wheter rainbowudino is connected
 	 */
-	public boolean connected() {
-		return (port != null);
+	public boolean isConnected() {
+		return (serialPort != null);
+	}	
+
+	/**
+	 * @return wheter rainbowudino is master (or slave)
+	 */
+	public boolean isMaster() {
+		return (master == null);
 	}	
 
 	/**
 	 * @return boolean if successfull 
 	 */
 	public boolean uploadFirmware() {	
-		if(!connected()) return false;
+		if(!isConnected()) return false;
 
-		this.port.stop();
+		this.serialPort.stop();
+		//TODO unload notifier???
 		if(uploadFirmware( this.getPortName(), this.UPLOAD_BAUDRATE) ) {
 			sleep(3000);
 			this.openPort(this.getPortName());
@@ -230,19 +250,13 @@ public class Rainbowduino  implements RCodes {
 	 * @param content buffer data
 	 * @param check wheter to perform sensity check
 	 */
-	public void bufferSetAt(int adr, int[] content, boolean check) {	   
-		try {
-			sendCommand(BUFFER_SET_AT, adr, content.length + 2);
-			if(check) {
-				int accepted_size = receive(BUFFER_SET_AT); 
-				if(content.length != accepted_size) throw new RainbowduinoError(ERROR_MISSMATCH);
-			}
-			for(int i = 0; i < content.length; i++) {
-				send(content[i]);
-			}			
-		} catch (RainbowduinoError e) {			
-			e.print();
-		}		
+	public void bufferSetAt(int adr, int[] content, boolean check) {
+		int[] data = new int[content.length + 1];
+		data[0] = adr;
+		for(int k = 0; k < content.length; k++) {
+		   data[k+1] = content[k]; 
+		}
+		sendCommand(BUFFER_SET_AT, data);
 	}
 
 	/** 
@@ -257,7 +271,7 @@ public class Rainbowduino  implements RCodes {
 			int[] content = new int[size];
 			for(int i = 0; i < size; i++) {			
 				try {
-					content[i] = waitAndReadSerial();
+					content[i] = waitForMessage();
 				} catch (RainbowduinoTimeOut e) {
 					throw new RainbowduinoError(ERROR_TIME_OUT);
 				}
@@ -367,37 +381,55 @@ public class Rainbowduino  implements RCodes {
 
 	/* +++++++++++++++++++ */
 	private void sendCommand(int commandCode) {
-		sendCommand(commandCode, 666, 1);
+		master.sendMessage(slaveNr, commandCode, null);
 	}
-	
-	private void sendCommand(int commandCode, int param) {
-		sendCommand(commandCode, param, 2);
+
+	private void sendCommand(int commandCode, int param) {		
+		master.sendMessage(slaveNr, commandCode, new int[]{param});
 	}
+
+	private void sendCommand(int commandCode, int[] data) {		
+		master.sendMessage(slaveNr, commandCode, data);
+	}	
 	
-	private void sendCommand(int commandCode, int param, int length) {		
-		//init command			
+	private void sendMessage(int receiverNr, int commandCode, int[] data) {		
+		//init command
+		this.responseMessage = null;
 		send(COMMAND);
-		//send length		 
+
+		//send length
+		send(receiverNr);
+
+		//flush buffer		//TODO why this here??
+//		if( isConnected() ) serialPort.clear();		
+
+		//send length
+		int length = 1; 
+		if( data != null) length += data.length;
 		send(length);
-		
-		//flush buffer		
-		if( connected() ) port.clear();		
-		//send command
+
 		send(commandCode);
-		if(length > 1) send(param);
-		sleep(10);
+
+		//send command
+		if( data != null)  {
+			for( int k = 0; k < data.length; k++ ) {
+				send(data[k]);
+			}
+		}
+		sleep(10); //TODO why this???
 	}
 
 	private int receive(int command) throws RainbowduinoError {		
 		//wait for response code
-		try {	
-			switch(waitAndReadSerial()) {
+		try {			
+			waitForMessage();
+			switch(responseMessage.command) {
 			case ERROR:
 				//return error code
-				throw new RainbowduinoError(waitAndReadSerial());							
+				throw new RainbowduinoError(responseMessage.param());							
 			case OK:
 				//return ok code
-				if(waitAndReadSerial() == command) return waitAndReadSerial();
+				if(responseMessage.paramRead() == command) return responseMessage.paramRead();
 			default:
 				return receive(command);
 			}
@@ -408,7 +440,7 @@ public class Rainbowduino  implements RCodes {
 	}
 
 	public String getPortName() {
-		if(connected()) return port.port.getName();
+		if(isConnected()) return serialPort.port.getName();
 		return null;
 	}
 
@@ -423,8 +455,7 @@ public class Rainbowduino  implements RCodes {
 	 */
 	private boolean openPort(String portName) {		
 		try {
-			port = new Serial(app, portName, BAUDRATE);
-			port.buffer(20);
+			serialPort = new RainbowduinoSerial(this, portName, BAUDRATE);
 			return true;
 		}
 		catch (RuntimeException e) {
@@ -433,9 +464,9 @@ public class Rainbowduino  implements RCodes {
 	}
 
 	private void send(int value) {
-		if(!connected()) return;
+		if(!isConnected()) return;
 		try {
-			port.write(value);			
+			serialPort.write(value);			
 		}
 		catch(RuntimeException e) {
 			RainbowduinoDetector.notifyError(this);
@@ -443,19 +474,28 @@ public class Rainbowduino  implements RCodes {
 		}
 	}
 
-	private int waitAndReadSerial() throws RainbowduinoTimeOut {
-		return waitAndReadSerial(TIMEOUT);
+	private int waitForMessage() throws RainbowduinoTimeOut {
+		return waitForMessage(TIMEOUT);
 	}
 
-	private int waitAndReadSerial(int timeout) throws RainbowduinoTimeOut {
-		if(!connected()) throw new RainbowduinoTimeOut();
-		while( timeout > 0 && port.available() < 1) {
+	private int waitForMessage(int timeout) throws RainbowduinoTimeOut {
+		if(!isConnected()) throw new RainbowduinoTimeOut();		
+		while( timeout > 0  && responseMessage == null) {
 			//print(".");
 			sleep(100); //in ms
 			timeout--;
 			if(timeout == 0) throw new RainbowduinoTimeOut();
 		}
-		return port.read();
+		return 1;
+	}
+
+	public void messageAvailable( RainbowduinoMessage _message ) {
+		if(responseMessage.is(SLAVE_NEW)) {
+			Rainbowduino newRainbowduino = new Rainbowduino(this, _message.param());
+			RainbowduinoDetector.init(this.app).registerRainbowduino(newRainbowduino);
+			return;
+		}
+		this.responseMessage = _message;
 	}
 
 	private void sleep(int ms) {
@@ -466,8 +506,10 @@ public class Rainbowduino  implements RCodes {
 		}
 	}
 
+	@SuppressWarnings("serial")
 	class RainbowduinoTimeOut extends Exception {}
 
+	@SuppressWarnings("serial")
 	class RainbowduinoError extends Exception {
 		int error;
 

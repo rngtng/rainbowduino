@@ -5,8 +5,13 @@ public interface RCodes {
 	public final static int API_VERSION_NR = 2;
 	
 	/* init code */
-	public final static int COMMAND     = 255;
+	public final static int COMMAND     = 0xFF;
 
+	/* return codes */
+	public final static int OK          = 0x0F;   //followed by return params	
+	public final static int ERROR       = 0x01; // followed by error code
+	
+	
 	/* command code */	
 	public final static int API_VERSION = 253; //returns OK + Version number	
 	public final static int PING        = 252; //returns OK + Version number
@@ -47,11 +52,9 @@ public interface RCodes {
 	public final static int SLAVE_NR_SET = 208; //returns OK + slave number
 	public final static int SLAVE_NR_GET = 206; //returns OK + slave number
 	public final static int SLAVE_ACTIV  = 204; //returns OK + slave number
-
-	/* return codes */ 
-	public final static int ERROR       = 255; // followed by error code
-	public final static int OK          = 1;   //followed by return params
 	
+	public final static int SLAVE_NEW  = 202; //returns OK + slave number
+		
 	public final static int ERROR_TIME_OUT   = 255; // followed by error code
 	public final static int ERROR_MISSMATCH   = 254; // followed by error code
 	
