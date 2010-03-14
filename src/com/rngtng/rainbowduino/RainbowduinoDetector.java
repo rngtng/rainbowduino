@@ -43,6 +43,7 @@ public class RainbowduinoDetector extends Thread {
 
 	public static String getAvailablePortName(PApplet _app) {
 		Rainbowduino rainbowduino = RainbowduinoDetector.init(_app).detectRainbowudino();
+		if( rainbowduino == null ) return null;
 		String portName = rainbowduino.getPortName();
 		rainbowduino.close(); //close port
 		return portName;		 
