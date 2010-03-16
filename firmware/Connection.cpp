@@ -21,18 +21,20 @@ void onReceiveInitCallback(int howMany) {
 //Master I2C Callback
 void onReceiveMasterCallback(int howMany) {
   uint8_t command = Wire.receive();
-  if( command == I2C_CMD_HELLO) {
-    //if( Con.slave_address_to_register == 0 ) 
-      Con.slave_address_to_register = Wire.receive(); //we can't instant replay here ;-(
+  if( command == I2C_CMD_HELLO) {  //we can't instant replay here ;-(
+    command = Wire.receive();
+    if( Con.slave_address_to_register == 0 )  Con.slave_address_to_register = command;
   }
   else {   //forward data to serial
-    Serial.write(command); //TODO Serial within Wire is bad!???
+    //Serial.write(command);
+    Serial.println(command, DEC);
     //TODO send slave number???
     //TODO send message length??
     while( howMany > 1 ) {
-      Serial.write( Wire.receive() );
+      command = Wire.receive();
+      Serial.println( command, DEC);
       howMany--;
-    }
+    } 
   }
 }
 
@@ -52,14 +54,15 @@ void Connection::begin() {
   //TODO baud_rate = _baud_rate;
 
   // 1. read last_adress from EEPROM and normalize to value between 0-16 
-  i2c_address = EEPROM.read(I2C_EEPROM_ADR) & 0x0F;
+  uint8_t old_i2c_address = EEPROM.read(I2C_EEPROM_ADR) & 0x0F;
 
   // 2. startup delay 
-  int delay_time =  i2c_address * STARTUP_DELAY_FACTOR;
-  delay(delay_time);
-  
+  if( old_i2c_address > I2C_MASTER_ADR) {
+     int delay_time =  (old_i2c_address - I2C_MASTER_ADR ) * STARTUP_DELAY_FACTOR;
+     delay(delay_time);
+  }
   // 3. open I2C connection with I2C_START_ADR as offset
-  i2c_address += I2C_START_ADR;  
+  i2c_address = old_i2c_address + I2C_START_ADR;  
   Wire.begin(i2c_address);
 
   // 4. register Callback fnc
@@ -67,13 +70,14 @@ void Connection::begin() {
 
   //5. wait for response with new slave address
   uint8_t c = I2C_WAIT_FOR_ADDRESS_RETRYS;  
+  int delay_time2 =  max(1, old_i2c_address - I2C_MASTER_ADR) * I2C_WAIT_FOR_ADDRESS_TIMEOUT;
   while( i2c_address >= I2C_START_ADR && c > 0) {  
     // 5a. make call to master with static number.
     Wire.beginTransmission(I2C_MASTER_ADR);
     Wire.send(I2C_CMD_HELLO);
     Wire.send(i2c_address);   //send adress where to respond to
     Wire.endTransmission();
-    delay(I2C_WAIT_FOR_ADDRESS_TIMEOUT);
+    delay(delay_time2);
     c--;
   }  
 
@@ -107,10 +111,11 @@ void Connection::beginMaster(uint8_t master_address, bool update_adress) {
   messageAwaiting = false;
   inputBufferLength = 0;
   slave_address_to_register = 0;
-  outputBuffer = &buffer1[0];
-  inputBuffer  = &buffer2[0];
   
   last_slave_address = I2C_SLAVE_ADR;
+  
+  inputBuffer  = (uint8_t*) calloc( MESSAGE_BUFFER_SIZE, sizeof(uint8_t)); //buffer1; //point to buffers
+  outputBuffer = (uint8_t*) calloc( MESSAGE_BUFFER_SIZE, sizeof(uint8_t)); //buffer2; //point to buffers
 }
 
 void Connection::beginSlave(uint8_t slave_address, bool update_adress) {
@@ -134,9 +139,8 @@ void Connection::beginSlave(uint8_t slave_address, bool update_adress) {
 /******************************************************************/
 void Connection::registerPendingSlave() {
   if( slave_address_to_register == 0) return;
-  delay(1000);
   last_slave_address++;
-  Wire.beginTransmission(8); //slave_address_to_register);
+  Wire.beginTransmission(slave_address_to_register);
   Wire.send(I2C_CMD_OK);
   Wire.send(last_slave_address);   //send adress where to respond to
   Wire.endTransmission();
@@ -149,11 +153,11 @@ void Connection::registerPendingSlave() {
 
 /******************************************************************/
 void Connection::onMessageAvailable(conCallbackFunction newFunction) {
-  callback = newFunction;
+  onMessageAvailableCallback = newFunction;
 }
 
-void Connection::loop() {
-  if( Serial.available() ) process( Serial.read() );
+void Connection::loop() {  
+  if( Serial.available() ) Con.process( Serial.read() );  
   registerPendingSlave();
 }  
 
@@ -181,7 +185,7 @@ uint8_t Connection::processMessage(uint8_t serialByte) {
   if( inputBufferIndex == inputBufferLength ) {
     //message fully received
     //1. swap buffers
-    byte* tmpPointer = outputBuffer;
+    uint8_t* tmpPointer = outputBuffer;
     outputBuffer = inputBuffer;
     outputBufferLength = inputBufferLength;
     outputBufferIndex = 0;
@@ -192,7 +196,7 @@ uint8_t Connection::processMessage(uint8_t serialByte) {
     inputBufferIndex = 0;
     messageAwaiting = false;
     //3. execute callback
-    if(callback != NULL) (*callback)();
+    if(onMessageAvailableCallback != NULL) (*onMessageAvailableCallback)();
   }
   //TODO if (bufferIndex >= bufferLastIndex) reset();
   return 3;

@@ -33,16 +33,22 @@ long frame_delay;
 //
 void setup() {
   Rainbowduino.begin();
-  Con.beginMaster();
+  uint8_t last_adr = EEPROM.read(I2C_EEPROM_ADR) & 0x0F; //DEBUG
+  Rainbowduino.set_frame_line(0,1,last_adr,last_adr,last_adr);  //DEBUG
+
+  Con.begin();
   Con.onMessageAvailable(execute);
   
   reset();
-  load_from_eeprom();
+  //load_from_eeprom();
   start();
 }
 
 void loop() {
-  while ( Serial.available() ) Con.process( Serial.read() );
+  Rainbowduino.set_frame_pixel(0,0,0,1,Con.master,Con.master);
+  Rainbowduino.set_frame_line(0,1,Con.i2c_address,Con.last_slave_address, Con.slave_address_to_register);  
+  delay(10);
+  Con.loop();
 }
 
 ///////////////////////////////////////////////////

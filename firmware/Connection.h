@@ -21,12 +21,12 @@
 #define I2C_CMD_HELLO 23
 #define I2C_CMD_OK 42
 
-#define I2C_WAIT_FOR_ADDRESS_TIMEOUT 500 //ms
+#define I2C_WAIT_FOR_ADDRESS_TIMEOUT 30 //ms
 #define I2C_WAIT_FOR_ADDRESS_RETRYS 3 //number of retrys to get an slave adress
 
 #define I2C_EEPROM_ADR 0 //where the gets written to
 
-#define STARTUP_DELAY_FACTOR 100 //in ms
+#define STARTUP_DELAY_FACTOR 250 //in ms
 
 #define MESSAGE_BUFFER_SIZE 32 //max 128
 #define MESSAGE_START 255
@@ -45,8 +45,9 @@ class Connection {
 
 public:
   bool master;
+  uint8_t last_slave_address;
+  
   volatile uint8_t i2c_address;
-  volatile uint8_t last_slave_address;
   volatile uint8_t slave_address_to_register;
   
   void loop();
@@ -62,24 +63,26 @@ public:
   void registerPendingSlave();
   
   void ok(uint8_t command, uint8_t param);
+  //TODO
+  // void error(uint8_t command, uint8_t param);
+  // void command(uint8_t command, uint8_t param);
+  //void send(uint8_t type, uint8_t command, uint8_t param);
+  
   
   //TODO
   void write(uint8_t data);
   
-  uint8_t inputBufferLength; //number of bytes to receive
+  uint8_t inputBufferLength; //number of bytes to receive TODO move private!?
 
 private: 
   bool messageAwaiting; //status wheter Message parsing is in progress
   
-  conCallbackFunction callback;
+  conCallbackFunction onMessageAvailableCallback;
   
-  uint8_t buffer1[MESSAGE_BUFFER_SIZE]; // Buffer that holds the data
-  byte* inputBuffer; // Pointer to current data
-
+  uint8_t* inputBuffer; // Buffer that holds the data 
   uint8_t inputBufferIndex; // Index where to write the data
   
-  uint8_t buffer2[MESSAGE_BUFFER_SIZE]; // Buffer that holds the data
-  byte* outputBuffer;
+  uint8_t* outputBuffer;
   uint8_t outputBufferLength;
   uint8_t outputBufferIndex; // Index where to write the data  
 };
