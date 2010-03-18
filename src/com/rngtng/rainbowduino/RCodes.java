@@ -4,13 +4,10 @@ public interface RCodes {
 
 	public final static int API_VERSION_NR = 2;
 	
-	/* init code */
-	public final static int COMMAND     = 0xFF;
-
-	/* return codes */
-	public final static int OK          = 0x0F;   //followed by return params	
-	public final static int ERROR       = 0x01; // followed by error code
-	
+	/* Header Codes */
+	public final static int COMMAND     = 0xFF;  // followed by commands
+	public final static int OK          = 0x0F;  // followed by return params	
+	public final static int ERROR       = 0x01;  // followed by error code	
 	
 	/* command code */	
 	public final static int API_VERSION = 253; //returns OK + Version number	
