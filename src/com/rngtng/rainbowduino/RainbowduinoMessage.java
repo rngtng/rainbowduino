@@ -1,51 +1,57 @@
 package com.rngtng.rainbowduino;
 
+import processing.core.PApplet;
+
 public class RainbowduinoMessage implements RCodes {
-	
+
+	//HEADER
 	public int messageType = -1;	
 	public int receiver    = -1;  //0 = master, 1 = first slave etc.
-	public int command     = -1;	
-	public int length      = -1;
-	
-	int toRead;
-	int toReceive;
-	
+	public int length      = -1;	
+
+	//BODY
+	public int command     = -1;		
 	int[] paramBuffer = new int[64];
 
-	public void consume(int value) {
-		if(ready()) return; //false
+	int toRead;
+	int toReceive;
 
+
+	public void consume(int serialByte) {
+		if(ready()) return; //false
+		//PApplet.println(serialByte);
 		if( messageType == -1) {
-			if( value == COMMAND || value == OK || value == ERROR ) { 
-				messageType = value;				
+			if( serialByte == COMMAND || serialByte == OK || serialByte == ERROR ) { 
+				messageType = serialByte;				
+				toReceive = 0;
 				toRead = 0;
 			}
 			return;
 		}
-		
-		if( command == -1 ) {
-			command = value;
-			return;
-		}
 
 		if( receiver == -1 ) {
-			command = value;
+			receiver = serialByte;
 			return;
 		}		
-		
+
 		if( length == -1 ) {
 			//TODO waht if size > 64????
-			length = value;
-			toRead = 0;
+			length = serialByte;						
 			return;
 		}	   
 
-		paramBuffer[toReceive++] = value;
+		if( command == -1 ) {
+			command = serialByte;
+			toReceive++;
+			return;
+		}
+
+		paramBuffer[toReceive++] = serialByte;
 		return;	
 	}
-	
+
 	public boolean ready() {
-	  return toReceive == length;
+		return toReceive == length;
 	}
 
 	public boolean isError() {
@@ -55,15 +61,15 @@ public class RainbowduinoMessage implements RCodes {
 	public boolean isOK() {
 		return messageType == OK;	
 	}	
-	
+
 	public boolean isCommand() {
 		return messageType == COMMAND;	
 	}	
-	
+
 	public boolean is(int _command) {
 		return ready() && command == _command;	
 	}
-	
+
 	public int param() {
 		return paramBuffer[0];	
 	}
@@ -71,5 +77,5 @@ public class RainbowduinoMessage implements RCodes {
 	public int paramRead() {
 		return paramBuffer[toRead++];	
 	}
-	
+
 }
