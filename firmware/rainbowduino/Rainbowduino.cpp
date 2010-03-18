@@ -40,6 +40,7 @@ void RainbowduinoDriver::begin() {
   DDRB = 0xff;
   PORTB = 0;
   PORTD = 0;
+  frameBuffer = (uint8_t*) calloc( NUM_ROWS*MAX_NUM_FRAMES, sizeof(uint8_t)); 
   
   reset();  
 }
@@ -75,7 +76,7 @@ void RainbowduinoDriver::set_frame(uint8_t frame_nr, byte* data) {
   if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS;
   for(uint8_t row = 0; row < NUM_ROWS; row++) {
-    frame_buffer[offset+row] = data[row];
+    frameBuffer[offset+row] = data[row];
   }
   if(frame_nr >= num_frames) num_frames = frame_nr + 1;
 }
@@ -83,31 +84,31 @@ void RainbowduinoDriver::set_frame(uint8_t frame_nr, byte* data) {
 void RainbowduinoDriver::set_frame_row(uint8_t frame_nr, uint8_t row, uint8_t data) {
   if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS;
-  frame_buffer[offset+row] = data;
+  frameBuffer[offset+row] = data;
   if(frame_nr >= num_frames) num_frames = frame_nr + 1;
 }
 
 uint8_t RainbowduinoDriver::get_frame_row(uint8_t frame_nr, uint8_t row) {
   if(frame_nr >= num_frames) return 0;
   word offset = frame_nr * NUM_ROWS;
-  return frame_buffer[offset+row];
+  return frameBuffer[offset+row];
 }
 
 void RainbowduinoDriver::set_frame_line(uint8_t frame_nr, uint8_t x, uint8_t red, uint8_t green, uint8_t blue) {
   if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS + x * 3;
-  frame_buffer[offset  ] = red;
-  frame_buffer[offset+1] = green;
-  frame_buffer[offset+2] = blue;
+  frameBuffer[offset  ] = red;
+  frameBuffer[offset+1] = green;
+  frameBuffer[offset+2] = blue;
   if(frame_nr >= num_frames) num_frames = frame_nr + 1;
 }
 
 void RainbowduinoDriver::set_frame_pixel(uint8_t frame_nr, uint8_t x, uint8_t y, uint8_t red, uint8_t green, uint8_t blue) {
   if(frame_nr >= MAX_NUM_FRAMES) return;
   word offset = frame_nr * NUM_ROWS + x * 3;
-  frame_buffer[offset  ] = (red   > 0) ? frame_buffer[offset  ] | (1<<y) : frame_buffer[offset  ] & ~(1<<y);
-  frame_buffer[offset+1] = (green > 0) ? frame_buffer[offset+1] | (1<<y) : frame_buffer[offset+1] & ~(1<<y);
-  frame_buffer[offset+2] = (blue  > 0) ? frame_buffer[offset+2] | (1<<y) : frame_buffer[offset+2] & ~(1<<y);
+  frameBuffer[offset  ] = (red   > 0) ? frameBuffer[offset  ] | (1<<y) : frameBuffer[offset  ] & ~(1<<y);
+  frameBuffer[offset+1] = (green > 0) ? frameBuffer[offset+1] | (1<<y) : frameBuffer[offset+1] & ~(1<<y);
+  frameBuffer[offset+2] = (blue  > 0) ? frameBuffer[offset+2] | (1<<y) : frameBuffer[offset+2] & ~(1<<y);
   if(frame_nr >= num_frames) num_frames = frame_nr + 1;
 }
 
@@ -115,7 +116,7 @@ void RainbowduinoDriver::set_frame_pixel(uint8_t frame_nr, uint8_t x, uint8_t y,
 void RainbowduinoDriver::draw() {
   if(num_frames == 0) return; //no frames available
   off = current_frame_nr * NUM_ROWS + current_row;
-  draw_row(current_row / 3, level, frame_buffer[off++], frame_buffer[off++], frame_buffer[off]);
+  draw_row(current_row / 3, level, frameBuffer[off++], frameBuffer[off++], frameBuffer[off]);
   if(current_row >= NUM_ROWS - 1) {
     current_row =  0;
     current_level = (current_level >= NUM_LEVEL - 1) ? 0 : current_level+1;    

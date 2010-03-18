@@ -25,7 +25,7 @@
 #define EEPROM_START 10 //0 is reserved, user sth > 0
 
 //running mode
-byte running;
+uint8_t running;
 long frame_delay;
 
 ///////////////////////////////////////////////////
@@ -45,9 +45,16 @@ void setup() {
 }
 
 void loop() {
-  Rainbowduino.set_frame_pixel(0,0,0,1,Con.master,Con.master);
-  Rainbowduino.set_frame_line(0,1,Con.i2c_address,Con.last_slave_address, Con.slave_address_to_register);  
-  delay(10);
+  //Rainbowduino.set_frame_pixel(0,0,0,1,Con.master,Con.master);
+  //Rainbowduino.set_frame_line(0,1,Con.i2c_address,Con.last_slave_address, Con.slave_address_to_register);  
+  //Rainbowduino.set_frame_line(0,2,Con.inputBufferIndex,Con.inputBufferLength, 0);
+  //Rainbowduino.set_frame_line(0,3,Con.outputBufferIndex,Con.outputBufferLength, 0);
+  //
+  //Rainbowduino.set_frame_line(0,5,Con.inputBuffer[0],Con.inputBuffer[1], Con.inputBuffer[2]);
+  //Rainbowduino.set_frame_line(0,6,Con.outputBuffer[0],Con.outputBuffer[1], Con.outputBuffer[2]);
+  
+  //delay(10);
+  if( Serial.available() ) Con.process( Serial.read() );
   Con.loop();
 }
 
@@ -86,9 +93,9 @@ void set_frame_delay(long frame_delay_value) {
 // API Stuff
 //
 void execute() {
-  byte command = Con.read();
-  byte return_value = 0;
-  byte param = 0;
+  uint8_t command = Con.read();
+  uint8_t return_value = 0;
+  uint8_t param = 0;
   switch(command) {
       /* Basic Control */
     case PING:
@@ -126,14 +133,14 @@ void execute() {
     case BUFFER_SET_AT:
       param = Con.read(); //read adress value
       return_value = NUM_ROWS;
-      for(byte row = 0; row < NUM_ROWS; row++) {
+      for(uint8_t row = 0; row < NUM_ROWS; row++) {
         Rainbowduino.set_frame_row(param, row, Con.read());
       }
       break;
     case BUFFER_GET_AT:
       param = Con.read(); //read adress value
       return_value = NUM_ROWS;
-      for(byte row = 0; row < NUM_ROWS; row++) {
+      for(uint8_t row = 0; row < NUM_ROWS; row++) {
         Con.write(Rainbowduino.get_frame_row(param, row));
       }
       break;
@@ -179,7 +186,7 @@ void save_to_eeprom() {
   word num_frames = Rainbowduino.get_num_frames();
   EEPROM.write(addr++, num_frames);
   for( word frame_nr = 0; frame_nr < num_frames; frame_nr++ ) {
-    for( byte row = 0; row < NUM_ROWS; row++ ) {
+    for( uint8_t row = 0; row < NUM_ROWS; row++ ) {
       EEPROM.write(addr++, Rainbowduino.get_frame_row(frame_nr, row));
     }
   }
@@ -189,7 +196,7 @@ void load_from_eeprom() {
   word addr = EEPROM_START;
   word num_frames = EEPROM.read(addr++);
   for( word frame_nr = 0; frame_nr < num_frames; frame_nr++ ) {
-    for( byte row = 0; row < NUM_ROWS; row++ ) {
+    for( uint8_t row = 0; row < NUM_ROWS; row++ ) {
       Rainbowduino.set_frame_row(frame_nr, row, EEPROM.read(addr++));
     }
   }
