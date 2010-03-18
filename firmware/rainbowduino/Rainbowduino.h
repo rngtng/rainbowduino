@@ -43,7 +43,7 @@
 
 #define NUM_LINES 8
 #define NUM_ROWS 24 // 3 BYTES per ROW  x 8 Lines = 24Bytes
-#define MAX_NUM_FRAMES 21 // = 24Bytes * 21 = 504Bytes 
+#define MAX_NUM_FRAMES 10 // = 24Bytes * 21 = 504Bytes 
 
 #define NUM_LEVEL 16 
 #define DEFAULT_LEVEL 1 //max 16
@@ -53,7 +53,7 @@
 class RainbowduinoDriver {
 
 public:
-  uint8_t frame_buffer[NUM_ROWS*MAX_NUM_FRAMES]; // [FRAME_BUFFER_SIZE]; //size of EEPROM -> to read faster??
+  uint8_t* frameBuffer; // [FRAME_BUFFER_SIZE]; //size of EEPROM -> to read faster??
   uint8_t level;
     
   void begin();

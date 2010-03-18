@@ -29,12 +29,18 @@
 #define STARTUP_DELAY_FACTOR 250 //in ms
 
 #define MESSAGE_BUFFER_SIZE 32 //max 128
-#define MESSAGE_START 255
-#define MESSAGE_OK 1
+
+/* Header Codes */
+#define COMMAND     0xFF  // followed by commands
+#define OK          0x0F  // followed by return params
+#define ERROR       0x01  // followed by error code
+
+#define SLAVE_NEW   202 //returns OK + slave number
 
 #include <Wire.h>
 #include "WProgram.h"
-//DEBUG #include "Rainbowduino.h"
+//DEBUG 
+#include "Rainbowduino.h"
 
  extern "C" {
  // callback function
@@ -55,14 +61,16 @@ public:
   void beginMaster(uint8_t master_address = I2C_MASTER_ADR, bool update_adress = true);
   void beginSlave(uint8_t slave_address, bool update_adress = true);
   void onMessageAvailable(conCallbackFunction newFunction);
-  int read();
+  uint8_t read();
   uint8_t process(uint8_t serialByte);
   uint8_t processMessage(uint8_t serialByte);
-  uint8_t available();
+  int8_t available();
   
   void registerPendingSlave();
   
   void ok(uint8_t command, uint8_t param);
+  void command(uint8_t command, uint8_t param);
+  
   //TODO
   // void error(uint8_t command, uint8_t param);
   // void command(uint8_t command, uint8_t param);
@@ -74,8 +82,9 @@ public:
   
   uint8_t inputBufferLength; //number of bytes to receive TODO move private!?
 
-private: 
-  bool messageAwaiting; //status wheter Message parsing is in progress
+//private: 
+  uint8_t messageType; //status wheter Message parsing is in progress
+  uint8_t messageReceiver; //status wheter Message parsing is in progress
   
   conCallbackFunction onMessageAvailableCallback;
   

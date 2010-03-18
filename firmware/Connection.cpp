@@ -27,12 +27,12 @@ void onReceiveMasterCallback(int howMany) {
   }
   else {   //forward data to serial
     //Serial.write(command);
-    Serial.println(command, DEC);
+    //Serial.println(command, DEC);
     //TODO send slave number???
     //TODO send message length??
     while( howMany > 1 ) {
       command = Wire.receive();
-      Serial.println( command, DEC);
+      //Serial.println( command, DEC);
       howMany--;
     } 
   }
@@ -50,8 +50,9 @@ void onReceiveSlaveCallback(int howMany) {
 void Connection::begin() {
   master = false;
   i2c_address = 0;
-  //TODO serial = _serial;
-  //TODO baud_rate = _baud_rate;
+
+//TODO: if we detect a working serial port, take master role in any case, notify all others to restart
+// -> http://stackoverflow.com/questions/195304/check-if-serial-port-is-listening
 
   // 1. read last_adress from EEPROM and normalize to value between 0-16 
   uint8_t old_i2c_address = EEPROM.read(I2C_EEPROM_ADR) & 0x0F;
@@ -108,7 +109,8 @@ void Connection::beginMaster(uint8_t master_address, bool update_adress) {
   //8. save new adress to EEPROM
   EEPROM.write(I2C_EEPROM_ADR, i2c_address);
   
-  messageAwaiting = false;
+  messageType = 0;
+  messageReceiver = 255;  
   inputBufferLength = 0;
   slave_address_to_register = 0;
   
@@ -145,8 +147,9 @@ void Connection::registerPendingSlave() {
   Wire.send(last_slave_address);   //send adress where to respond to
   Wire.endTransmission();
 
-  //TODO notify serial about new slave
-
+  //notify serial about new slave
+  command( SLAVE_NEW, last_slave_address);
+  
   slave_address_to_register = 0;
 }
 
@@ -157,31 +160,39 @@ void Connection::onMessageAvailable(conCallbackFunction newFunction) {
 }
 
 void Connection::loop() {  
-  if( Serial.available() ) Con.process( Serial.read() );  
   registerPendingSlave();
 }  
 
 
 uint8_t Connection::process(uint8_t serialByte) {
-  //DEBUG Rainbowduino.set_frame_line(0,1,serialByte,0,0);
-  if( !messageAwaiting && serialByte == MESSAGE_START ) {
-    messageAwaiting = true;
-    return 0;
-  }
-
-  if( messageAwaiting && inputBufferLength == 0 ) {
-    inputBufferLength = serialByte;
-    //TODO waht if message siez > allowed msg SIZE???
+  Rainbowduino.set_frame_line(0,7,serialByte,0,0);
+  
+  if( messageType == 0) {
+    if( serialByte == COMMAND || serialByte == OK || serialByte == ERROR ) { 
+      messageType = serialByte;
+      inputBufferIndex = 0;
+    }
     return 1;
   }
+  
+  if( messageReceiver > 128 ) {
+    messageReceiver = serialByte;
+    return 2;
+  }    
+  
+  if( inputBufferLength < 1 ) {
+    //TODO waht if size > 64????
+    inputBufferLength = serialByte;
+    return 3;
+  }     
 
   processMessage(serialByte);
 }
 
 uint8_t Connection::processMessage(uint8_t serialByte) {
-  if( !messageAwaiting || inputBufferLength < 1 ) return 3;
-  inputBuffer[inputBufferIndex] = serialByte;
-  inputBufferIndex++;
+  if( messageType == 0 || messageReceiver > 128 || inputBufferLength < 1 ) return 3;
+  inputBuffer[inputBufferIndex++] = serialByte;
+
   if( inputBufferIndex == inputBufferLength ) {
     //message fully received
     //1. swap buffers
@@ -194,20 +205,21 @@ uint8_t Connection::processMessage(uint8_t serialByte) {
     inputBuffer = tmpPointer;
     inputBufferLength = 0;
     inputBufferIndex = 0;
-    messageAwaiting = false;
+    messageType = 0;
+    messageReceiver = 255;
     //3. execute callback
     if(onMessageAvailableCallback != NULL) (*onMessageAvailableCallback)();
   }
   //TODO if (bufferIndex >= bufferLastIndex) reset();
-  return 3;
+  return 10;
 }
 
-int Connection::read() {
+uint8_t Connection::read() {
   if( available() < 1) return 0;
   return outputBuffer[outputBufferIndex++];
 }
 
-uint8_t Connection::available() {
+int8_t Connection::available() {
   return (outputBufferLength - outputBufferIndex);
 }
 
@@ -217,8 +229,24 @@ void Connection::write(uint8_t w) {
 
 void Connection::ok(uint8_t command, uint8_t param) {
   if( master ) {
-    Serial.flush();
-    Serial.write(MESSAGE_OK);
+//    Serial.flush();
+      Serial.write(OK);
+      Serial.write((byte) 0); //as we are master!
+      Serial.write(2); //two more to follow
+      Serial.write(command);
+      Serial.write(param);
+  }
+  else {
+    //TODO I2C
+  }
+}
+
+void Connection::command(uint8_t command, uint8_t param) {
+  if( master ) {
+//    Serial.flush();
+    Serial.write(COMMAND);
+    Serial.write((byte) 0); //as we are master!
+    Serial.write(2); //two more to follow
     Serial.write(command);
     Serial.write(param);
   }

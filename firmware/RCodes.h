@@ -9,9 +9,6 @@
 ////////////// API COMMANDS ///////////////////////
 #define API_VERSION_NR 2
 
-/* init code */
-#define COMMAND     255
-
 /* command code */
 #define API_VERSION 253 //returns OK + Version number	
 #define PING        252 //returns OK + Version number
@@ -47,9 +44,6 @@
 #define SPEED_INC   224 //returns OK + speed value
 #define SPEED_DEC   222 //returns OK + speed value
 
-/* return codes */
-#define ERROR       255 // followed by error code
-#define OK          1   //followed by return params
 
 #define ERROR_TIME_OUT   255 // followed by error code	
 
