@@ -68,6 +68,7 @@ class Message {
    bool isCommand();
    bool is(uint8_t command);
    uint8_t type();
+   uint8_t command();
    uint8_t param();
    uint8_t paramRead();
 };
@@ -85,7 +86,6 @@ public:
   void beginMaster(uint8_t master_address = I2C_MASTER_ADR, bool update_adress = true);
   void beginSlave(uint8_t slave_address, bool update_adress = true);
   void onMessageAvailable(conCallbackFunction newFunction);
-  uint8_t read();
   uint8_t process(uint8_t serialByte);
   bool available();
   
@@ -108,6 +108,8 @@ public:
   
   Message* inputMessage; // Buffer that holds the data 
   Message* outputMessage; // Buffer that holds the data 
+  Message buffer1; // Buffer that holds the data 
+  Message buffer2; // Buffer that holds the data  
 };
 
 extern Connection Con;

@@ -28,7 +28,7 @@ public class RainbowduinoMessage implements RCodes {
 	}
 
 	public boolean ready() {
-		return writeIndex == (HEADER_LENGTH + data[INDEX_LENGTH]);
+		return (writeIndex >= HEADER_LENGTH) && (writeIndex == (HEADER_LENGTH + data[INDEX_LENGTH]));
 	}
 
 	public boolean isError() {

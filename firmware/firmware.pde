@@ -45,13 +45,15 @@ void setup() {
 }
 
 void loop() {
-  //Rainbowduino.set_frame_pixel(0,0,0,1,Con.master,Con.master);
-  //Rainbowduino.set_frame_line(0,1,Con.i2c_address,Con.last_slave_address, Con.slave_address_to_register);  
-  //Rainbowduino.set_frame_line(0,2,Con.inputBufferIndex,Con.inputBufferLength, 0);
-  //Rainbowduino.set_frame_line(0,3,Con.outputBufferIndex,Con.outputBufferLength, 0);
-  //
-  //Rainbowduino.set_frame_line(0,5,Con.inputBuffer[0],Con.inputBuffer[1], Con.inputBuffer[2]);
-  //Rainbowduino.set_frame_line(0,6,Con.outputBuffer[0],Con.outputBuffer[1], Con.outputBuffer[2]);
+  Rainbowduino.set_frame_pixel(0,0,0,1,Con.master,Con.master);
+  Rainbowduino.set_frame_line(0,1,Con.i2c_address,Con.last_slave_address, Con.slave_address_to_register);  
+  
+//  Rainbowduino.set_frame_line(0,5,Con.inputMessage->type(),Con.inputMessage->command(), Con.inputMessage->param());
+//  Rainbowduino.set_frame_line(0,6,Con.outputMessage->type(),Con.outputMessage->command(), Con.outputMessage->param());
+
+  Rainbowduino.set_frame_line(0,5,0,Con.inputMessage->readIndex, Con.inputMessage->param());
+  Rainbowduino.set_frame_line(0,6,0,0, Con.outputMessage->param());
+
   
   //delay(10);
   if( Serial.available() ) Con.process( Serial.read() );
@@ -93,7 +95,7 @@ void set_frame_delay(long frame_delay_value) {
 // API Stuff
 //
 void execute() {
-  uint8_t command = Con.read();
+  uint8_t command = Con.outputMessage->command();
   uint8_t return_value = 0;
   uint8_t param = 0;
   switch(command) {
@@ -117,28 +119,28 @@ void execute() {
       return_value = Rainbowduino.get_current_frame_nr();
       break;            
     case FRAME_SET:
-      Rainbowduino.set_current_frame_nr(Con.read());
+      Rainbowduino.set_current_frame_nr(Con.outputMessage->paramRead());
     case FRAME_GET:
       return_value = Rainbowduino.get_current_frame_nr();
       break;
 
       /* Brightness Control */
     case BRIGHTNESS_SET:
-      Rainbowduino.level = Con.read();
+      Rainbowduino.level = Con.outputMessage->paramRead();
     case BRIGHTNESS_GET:
       return_value = Rainbowduino.level;
       break;
 
       /* Buffer Control */
     case BUFFER_SET_AT:
-      param = Con.read(); //read adress value
+      param = Con.outputMessage->paramRead(); //read adress value
       return_value = NUM_ROWS;
       for(uint8_t row = 0; row < NUM_ROWS; row++) {
-        Rainbowduino.set_frame_row(param, row, Con.read());
+        Rainbowduino.set_frame_row(param, row, Con.outputMessage->paramRead());
       }
       break;
     case BUFFER_GET_AT:
-      param = Con.read(); //read adress value
+      param = Con.outputMessage->paramRead(); //read adress value
       return_value = NUM_ROWS;
       for(uint8_t row = 0; row < NUM_ROWS; row++) {
         Con.write(Rainbowduino.get_frame_row(param, row));
@@ -156,7 +158,7 @@ void execute() {
 
       /* Speed Control */
     case SPEED_SET:
-      set_frame_delay(Con.read());
+      set_frame_delay(Con.outputMessage->paramRead());
     case SPEED_GET:
       return_value = frame_delay;
       break;
