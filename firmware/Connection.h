@@ -29,6 +29,12 @@
 #define STARTUP_DELAY_FACTOR 250 //in ms
 
 #define MESSAGE_DATA_SIZE 32 //max 128
+#define HEADER_LENGTH 4
+
+#define INDEX_TYPE     0
+#define INDEX_RECEIVER 1
+#define INDEX_COMMAND  2
+#define INDEX_LENGTH   3
 
 /* Header Codes */
 #define COMMAND     0xFF  // followed by commands
@@ -49,17 +55,21 @@
 
 class Message {
  public:
-   uint8_t type;
-   uint8_t receiver;
-   uint8_t length;
-   uint8_t command;
    uint8_t data[MESSAGE_DATA_SIZE];
-   uint8_t index;
-
+   uint8_t writeIndex;
+   uint8_t readIndex;
+   
    Message();
+   void consume( uint8_t dataByte );
    void reset();
    bool ready();
-   //consume??
+   bool isError();
+   bool isOk();
+   bool isCommand();
+   bool is(uint8_t command);
+   uint8_t type();
+   uint8_t param();
+   uint8_t paramRead();
 };
  
 class Connection {
@@ -77,7 +87,6 @@ public:
   void onMessageAvailable(conCallbackFunction newFunction);
   uint8_t read();
   uint8_t process(uint8_t serialByte);
-  uint8_t processMessage(uint8_t serialByte);
   bool available();
   
   void registerPendingSlave();
