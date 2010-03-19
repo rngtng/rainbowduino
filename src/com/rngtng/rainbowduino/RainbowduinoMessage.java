@@ -4,78 +4,62 @@ import processing.core.PApplet;
 
 public class RainbowduinoMessage implements RCodes {
 
-	//HEADER
-	public int messageType = -1;	
-	public int receiver    = -1;  //0 = master, 1 = first slave etc.
-	public int length      = -1;	
-
 	//BODY
-	public int command     = -1;		
-	int[] paramBuffer = new int[64];
+	int HEADER_LENGTH = 4;
+	
+	int INDEX_TYPE     = 0
+	int INDEX_RECEIVER = 1
+	int INDEX_COMMAND  = 2
+	int INDEX_LENGTH   = 3
+	
+	int[] data = new int[64 + HEADER_LENGTH]; //4 for HEADER: type, receiver, command, dataLength
 
-	int toRead;
-	int toReceive;
-
+	int writeIndex;
+	int readIndex;
 
 	public void consume(int serialByte) {
-		if(ready()) return; //false
-		//PApplet.println(serialByte);
-		if( messageType == -1) {
-			if( serialByte == COMMAND || serialByte == OK || serialByte == ERROR ) { 
-				messageType = serialByte;				
-				toReceive = 0;
-				toRead = 0;
-			}
-			return;
-		}
-
-		if( receiver == -1 ) {
-			receiver = serialByte;
-			return;
-		}		
-
-		if( length == -1 ) {
-			//TODO waht if size > 64????
-			length = serialByte;						
-			return;
-		}	   
-
-		if( command == -1 ) {
-			command = serialByte;
-			toReceive++;
-			return;
-		}
-
-		paramBuffer[toReceive++] = serialByte;
+		if(ready()) return;
+		if( writeIndex == 0 && !(serialByte == COMMAND || serialByte == OK || serialByte == ERROR)) return;
+		
+        data[writeIndex++] = serialByte;
 		return;	
+	}
+	
+	public void reset() {
+	    writeIndex = 0;
+	    readIndex = 0;
 	}
 
 	public boolean ready() {
-		return toReceive == length;
+		return writeIndex == (HEADER_LENGTH + data[LENGTH_INDEX]);
 	}
 
 	public boolean isError() {
-		return messageType == ERROR;	
+		return type() == ERROR;
 	}
 
 	public boolean isOK() {
-		return messageType == OK;	
+		return type() == OK;
 	}	
 
 	public boolean isCommand() {
-		return messageType == COMMAND;	
+		return type() == COMMAND;
 	}	
 
 	public boolean is(int _command) {
-		return ready() && command == _command;	
+		return ready() && command() == _command;
 	}
 
+    public int command() {
+        return data[INDEX_COMMAND];
+    }
+
 	public int param() {
-		return paramBuffer[0];	
+		return data[HEADER_LENGTH + 1];
 	}
 
 	public int paramRead() {
-		return paramBuffer[toRead++];	
+		return paramBuffer[HEADER_LENGTH + 1 + readIndex++];
 	}
 
 }
