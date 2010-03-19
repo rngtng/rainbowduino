@@ -378,14 +378,11 @@ public class Rainbowduino implements RCodes {
 
 		//flush buffer		//TODO why this here??
 		//		if( isConnected() ) serialPort.clear();		
-
-		//send length
-		int length = 1; 
-		if( data != null) length += data.length;
-		send(length);
-
 		send(commandCode);
-
+		
+		//send length
+		send( ( data != null) ? data.length : 0 );
+		
 		//send command
 		if( data != null )  {
 			for( int k = 0; k < data.length; k++ ) {
@@ -400,7 +397,7 @@ public class Rainbowduino implements RCodes {
 		try {			
 			waitForMessage();
 
-			switch(this.responseMessage.messageType) {
+			switch(this.responseMessage.type()) {
 			case ERROR:
 				//return error code
 				throw new RainbowduinoError(responseMessage.param());							

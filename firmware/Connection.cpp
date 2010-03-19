@@ -40,9 +40,8 @@ void onReceiveMasterCallback(int howMany) {
 
 //Slave I2C Callback
 void onReceiveSlaveCallback(int howMany) {
-  Con.inputMessage->length = howMany; //MaybeTODO use explizit -initMessage- command
   while( howMany > 0 ) {
-    Con.processMessage( Wire.receive() );
+    Con.process( Wire.receive()  );
     howMany--;
   }
 }
@@ -109,9 +108,7 @@ void Connection::beginMaster(uint8_t master_address, bool update_adress) {
   //8. save new adress to EEPROM
   EEPROM.write(I2C_EEPROM_ADR, i2c_address);
   
-  inputMessage->reset();
   slave_address_to_register = 0;
-  
   last_slave_address = I2C_SLAVE_ADR;
   
   inputMessage  = (Message*) malloc( sizeof(Message)); //buffer1; //point to buffers
@@ -164,39 +161,13 @@ void Connection::loop() {
 
 uint8_t Connection::process(uint8_t serialByte) {
   Rainbowduino.set_frame_line(0,7,serialByte,0,0);
-  
-  if( inputMessage->type == 0) {
-    if( serialByte == COMMAND || serialByte == OK || serialByte == ERROR ) { 
-      inputMessage->type = serialByte;
-      inputMessage->index = 0;
-    }
-    return 1;
-  }
-  
-  if( inputMessage->receiver > 128 ) {
-    inputMessage->receiver = serialByte;
-    return 2;
-  }    
-  
-  if( inputMessage->length < 1 ) {
-    //TODO waht if size > 64????
-    inputMessage->length = serialByte;
-    return 3;
-  }     
+  inputMessage->consume(serialByte);
 
-  processMessage(serialByte);
-}
-
-uint8_t Connection::processMessage(uint8_t serialByte) {
-  if( inputMessage->type == 0 || inputMessage->receiver > 128 || inputMessage->length < 1 ) return 3;
-  inputMessage->data[inputMessage->index++] = serialByte;
-
-  if( inputMessage->index == inputMessage->length ) {
+  if( inputMessage->ready() ) {
     //message fully received
     //1. swap buffers
     Message* tmpPointer = outputMessage;
     outputMessage = inputMessage;
-    outputMessage->index = 0; //reset()
     
     //2. reset inputBuffer and read process
     inputMessage = tmpPointer;
@@ -209,12 +180,8 @@ uint8_t Connection::processMessage(uint8_t serialByte) {
 }
 
 uint8_t Connection::read() {
-  if( available() < 1) return 0;
-  return outputMessage->data[outputMessage->index++];
-}
-
-bool Connection::available() {
-  return outputMessage->ready();
+  if( !outputMessage->ready() ) return 0;
+  return outputMessage->paramRead();
 }
 
 
@@ -250,18 +217,49 @@ void Connection::command(uint8_t command, uint8_t param) {
 }
 
 /*********************************************************/
-Message::Message() {
-    reset();
+Message::Message() {;
+  reset();
+}
+
+void Message::consume( uint8_t dataByte ){
+	if(ready()) return;
+	if( writeIndex == 0 && !(dataByte == COMMAND || dataByte == OK || dataByte == ERROR)) return;		
+      data[writeIndex++] = dataByte;
 }
 
 void Message::reset() {
-    type = 0;
-    receiver = 255;  
-    length = 0;
-    command = 0;
-    index = 0;
+  writeIndex = 0;
+  readIndex = 0;
 }
 
 bool Message::ready() {
-    return (length == index);
+return writeIndex == (HEADER_LENGTH + data[INDEX_LENGTH]);
+}
+
+bool Message::isError() {
+  return type() == ERROR;
+}
+
+bool Message::isOk() {
+  return type() == OK;
+}
+
+bool Message::isCommand() {
+  return type() == COMMAND;
+}
+
+bool Message::is(uint8_t command) {
+  return ready() && data[INDEX_COMMAND] == command;
+}
+
+uint8_t Message::type() {
+  return data[INDEX_TYPE];
+}
+
+uint8_t Message::param() {
+  return data[HEADER_LENGTH];
+}
+
+uint8_t Message::paramRead() {
+  return data[HEADER_LENGTH + readIndex++];
 }
