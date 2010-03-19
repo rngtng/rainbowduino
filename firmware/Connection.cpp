@@ -40,7 +40,7 @@ void onReceiveMasterCallback(int howMany) {
 
 //Slave I2C Callback
 void onReceiveSlaveCallback(int howMany) {
-  Con.inputBufferLength = howMany; //MaybeTODO use explizit -initMessage- command
+  Con.inputMessage->length = howMany; //MaybeTODO use explizit -initMessage- command
   while( howMany > 0 ) {
     Con.processMessage( Wire.receive() );
     howMany--;
@@ -109,15 +109,13 @@ void Connection::beginMaster(uint8_t master_address, bool update_adress) {
   //8. save new adress to EEPROM
   EEPROM.write(I2C_EEPROM_ADR, i2c_address);
   
-  messageType = 0;
-  messageReceiver = 255;  
-  inputBufferLength = 0;
+  inputMessage->reset();
   slave_address_to_register = 0;
   
   last_slave_address = I2C_SLAVE_ADR;
   
-  inputBuffer  = (uint8_t*) calloc( MESSAGE_BUFFER_SIZE, sizeof(uint8_t)); //buffer1; //point to buffers
-  outputBuffer = (uint8_t*) calloc( MESSAGE_BUFFER_SIZE, sizeof(uint8_t)); //buffer2; //point to buffers
+  inputMessage  = (Message*) malloc( sizeof(Message)); //buffer1; //point to buffers
+  outputMessage = (Message*) malloc( sizeof(Message)); //buffer2; //point to buffers
 }
 
 void Connection::beginSlave(uint8_t slave_address, bool update_adress) {
@@ -167,22 +165,22 @@ void Connection::loop() {
 uint8_t Connection::process(uint8_t serialByte) {
   Rainbowduino.set_frame_line(0,7,serialByte,0,0);
   
-  if( messageType == 0) {
+  if( inputMessage->type == 0) {
     if( serialByte == COMMAND || serialByte == OK || serialByte == ERROR ) { 
-      messageType = serialByte;
-      inputBufferIndex = 0;
+      inputMessage->type = serialByte;
+      inputMessage->index = 0;
     }
     return 1;
   }
   
-  if( messageReceiver > 128 ) {
-    messageReceiver = serialByte;
+  if( inputMessage->receiver > 128 ) {
+    inputMessage->receiver = serialByte;
     return 2;
   }    
   
-  if( inputBufferLength < 1 ) {
+  if( inputMessage->length < 1 ) {
     //TODO waht if size > 64????
-    inputBufferLength = serialByte;
+    inputMessage->length = serialByte;
     return 3;
   }     
 
@@ -190,23 +188,19 @@ uint8_t Connection::process(uint8_t serialByte) {
 }
 
 uint8_t Connection::processMessage(uint8_t serialByte) {
-  if( messageType == 0 || messageReceiver > 128 || inputBufferLength < 1 ) return 3;
-  inputBuffer[inputBufferIndex++] = serialByte;
+  if( inputMessage->type == 0 || inputMessage->receiver > 128 || inputMessage->length < 1 ) return 3;
+  inputMessage->data[inputMessage->index++] = serialByte;
 
-  if( inputBufferIndex == inputBufferLength ) {
+  if( inputMessage->index == inputMessage->length ) {
     //message fully received
     //1. swap buffers
-    uint8_t* tmpPointer = outputBuffer;
-    outputBuffer = inputBuffer;
-    outputBufferLength = inputBufferLength;
-    outputBufferIndex = 0;
+    Message* tmpPointer = outputMessage;
+    outputMessage = inputMessage;
+    outputMessage->index = 0; //reset()
     
     //2. reset inputBuffer and read process
-    inputBuffer = tmpPointer;
-    inputBufferLength = 0;
-    inputBufferIndex = 0;
-    messageType = 0;
-    messageReceiver = 255;
+    inputMessage = tmpPointer;
+    inputMessage->reset();
     //3. execute callback
     if(onMessageAvailableCallback != NULL) (*onMessageAvailableCallback)();
   }
@@ -216,11 +210,11 @@ uint8_t Connection::processMessage(uint8_t serialByte) {
 
 uint8_t Connection::read() {
   if( available() < 1) return 0;
-  return outputBuffer[outputBufferIndex++];
+  return outputMessage->data[outputMessage->index++];
 }
 
-int8_t Connection::available() {
-  return (outputBufferLength - outputBufferIndex);
+bool Connection::available() {
+  return outputMessage->ready();
 }
 
 
@@ -253,4 +247,21 @@ void Connection::command(uint8_t command, uint8_t param) {
   else {
     //TODO I2C
   }
+}
+
+/*********************************************************/
+Message::Message() {
+    reset();
+}
+
+void Message::reset() {
+    type = 0;
+    receiver = 255;  
+    length = 0;
+    command = 0;
+    index = 0;
+}
+
+bool Message::ready() {
+    return (length == index);
 }

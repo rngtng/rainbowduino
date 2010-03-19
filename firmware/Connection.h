@@ -28,7 +28,7 @@
 
 #define STARTUP_DELAY_FACTOR 250 //in ms
 
-#define MESSAGE_BUFFER_SIZE 32 //max 128
+#define MESSAGE_DATA_SIZE 32 //max 128
 
 /* Header Codes */
 #define COMMAND     0xFF  // followed by commands
@@ -47,8 +47,22 @@
      typedef void (*conCallbackFunction)(void);
  }
 
-class Connection {
+class Message {
+ public:
+   uint8_t type;
+   uint8_t receiver;
+   uint8_t length;
+   uint8_t command;
+   uint8_t data[MESSAGE_DATA_SIZE];
+   uint8_t index;
 
+   Message();
+   void reset();
+   bool ready();
+   //consume??
+};
+ 
+class Connection {
 public:
   bool master;
   uint8_t last_slave_address;
@@ -64,7 +78,7 @@ public:
   uint8_t read();
   uint8_t process(uint8_t serialByte);
   uint8_t processMessage(uint8_t serialByte);
-  int8_t available();
+  bool available();
   
   void registerPendingSlave();
   
@@ -80,20 +94,11 @@ public:
   //TODO
   void write(uint8_t data);
   
-  uint8_t inputBufferLength; //number of bytes to receive TODO move private!?
-
 //private: 
-  uint8_t messageType; //status wheter Message parsing is in progress
-  uint8_t messageReceiver; //status wheter Message parsing is in progress
-  
   conCallbackFunction onMessageAvailableCallback;
   
-  uint8_t* inputBuffer; // Buffer that holds the data 
-  uint8_t inputBufferIndex; // Index where to write the data
-  
-  uint8_t* outputBuffer;
-  uint8_t outputBufferLength;
-  uint8_t outputBufferIndex; // Index where to write the data  
+  Message* inputMessage; // Buffer that holds the data 
+  Message* outputMessage; // Buffer that holds the data 
 };
 
 extern Connection Con;
