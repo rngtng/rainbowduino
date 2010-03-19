@@ -111,8 +111,13 @@ void Connection::beginMaster(uint8_t master_address, bool update_adress) {
   slave_address_to_register = 0;
   last_slave_address = I2C_SLAVE_ADR;
   
-  inputMessage  = (Message*) malloc( sizeof(Message)); //buffer1; //point to buffers
-  outputMessage = (Message*) malloc( sizeof(Message)); //buffer2; //point to buffers
+  // inputMessage  = (Message*) malloc( sizeof(Message) ); //buffer1; //point to buffers
+  // inputMessage->reset();
+  // 
+  // outputMessage = (Message*) malloc( sizeof(Message) ); //buffer2; //point to buffers
+  // outputMessage->reset();
+  inputMessage = &buffer1;
+  outputMessage = &buffer2;
 }
 
 void Connection::beginSlave(uint8_t slave_address, bool update_adress) {
@@ -164,6 +169,7 @@ uint8_t Connection::process(uint8_t serialByte) {
   inputMessage->consume(serialByte);
 
   if( inputMessage->ready() ) {
+    Rainbowduino.set_frame_line(0,7,serialByte,255,0);
     //message fully received
     //1. swap buffers
     Message* tmpPointer = outputMessage;
@@ -178,12 +184,6 @@ uint8_t Connection::process(uint8_t serialByte) {
   //TODO if (bufferIndex >= bufferLastIndex) reset();
   return 10;
 }
-
-uint8_t Connection::read() {
-  if( !outputMessage->ready() ) return 0;
-  return outputMessage->paramRead();
-}
-
 
 void Connection::write(uint8_t w) {
 }
@@ -217,14 +217,14 @@ void Connection::command(uint8_t command, uint8_t param) {
 }
 
 /*********************************************************/
-Message::Message() {;
+Message::Message() {
   reset();
 }
 
 void Message::consume( uint8_t dataByte ){
 	if(ready()) return;
-	if( writeIndex == 0 && !(dataByte == COMMAND || dataByte == OK || dataByte == ERROR)) return;		
-      data[writeIndex++] = dataByte;
+	if( writeIndex == 0 && dataByte != COMMAND && dataByte != OK && dataByte != ERROR) return;
+  data[writeIndex++] = dataByte;
 }
 
 void Message::reset() {
@@ -233,7 +233,7 @@ void Message::reset() {
 }
 
 bool Message::ready() {
-return writeIndex == (HEADER_LENGTH + data[INDEX_LENGTH]);
+return (writeIndex >= HEADER_LENGTH) && (writeIndex == (HEADER_LENGTH + data[INDEX_LENGTH]));
 }
 
 bool Message::isError() {
@@ -253,13 +253,21 @@ bool Message::is(uint8_t command) {
 }
 
 uint8_t Message::type() {
+  if( !ready() ) return 0;  
   return data[INDEX_TYPE];
 }
 
+uint8_t Message::command() {
+  if( !ready() ) return 0;  
+  return data[INDEX_COMMAND];
+}
+
 uint8_t Message::param() {
+  if( !ready() ) return 0;  
   return data[HEADER_LENGTH];
 }
 
 uint8_t Message::paramRead() {
+  if( !ready() ) return 0;
   return data[HEADER_LENGTH + readIndex++];
 }
