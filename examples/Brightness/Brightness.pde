@@ -11,11 +11,7 @@ int f = 1;
 void setup() {
   RainbowduinoDetector.start(this);
   //rainbowduino = new Rainbowduino(this);
-/*
-  rainbowduino.bufferSetAt(0, new int[]{
-    255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255  }
-  );
-  rainbowduino.brightnessSet(1); */
+
   level = 1; // rainbowduino.brightnessGet();
 }
 
@@ -29,5 +25,9 @@ void draw() {
 
 void rainbowuinoAvailable(Rainbowduino _rainbowduino) {
   rainbowduino = _rainbowduino;
-  println("hi");
+  rainbowduino.bufferSetAt(0, new int[]{
+    255,255,255,255,255,255,255,255,0,255,255,8,255,255,128,63,255,255,255,255,255,255,255,255  }
+  );
+  rainbowduino.brightnessSet(1);  
+  println("hi " + rainbowduino.slaveNr );
 }
