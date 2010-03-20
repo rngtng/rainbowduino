@@ -45,19 +45,18 @@ void setup() {
 }
 
 void loop() {
-  Rainbowduino.set_frame_pixel(0,0,0,1,Con.master,Con.master);
-  Rainbowduino.set_frame_line(0,1,Con.i2c_address,Con.last_slave_address, Con.slave_address_to_register);  
+  if( Serial.available() ) Con.process( Serial.read() );
+  Con.loop();
+    
+//  Rainbowduino.set_frame_pixel(0,0,0,1,Con.master,Con.master);
+//  Rainbowduino.set_frame_line(0,1,Con.i2c_address,Con.last_slave_address, Con.slave_address_to_register);  
   
 //  Rainbowduino.set_frame_line(0,5,Con.inputMessage->type(),Con.inputMessage->command(), Con.inputMessage->param());
 //  Rainbowduino.set_frame_line(0,6,Con.outputMessage->type(),Con.outputMessage->command(), Con.outputMessage->param());
 
-  Rainbowduino.set_frame_line(0,5,0,Con.inputMessage->readIndex, Con.inputMessage->param());
-  Rainbowduino.set_frame_line(0,6,0,0, Con.outputMessage->param());
-
-  
+//  Rainbowduino.set_frame_line(0,5,0,Con.inputMessage->writeIndex, Con.inputMessage->param());
+//  Rainbowduino.set_frame_line(0,6,0,0, Con.outputMessage->param());
   //delay(10);
-  if( Serial.available() ) Con.process( Serial.read() );
-  Con.loop();
 }
 
 ///////////////////////////////////////////////////

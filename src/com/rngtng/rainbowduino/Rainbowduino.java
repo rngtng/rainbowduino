@@ -431,7 +431,6 @@ public class Rainbowduino implements RCodes {
 		if( portName == null) return false;
 		try {
 			serialPort = new RainbowduinoSerial(this, portName, BAUDRATE);
-			sleep(2000);
 			return true;
 		}
 		catch (RuntimeException e) {
