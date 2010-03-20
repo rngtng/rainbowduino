@@ -1,16 +1,15 @@
 /* Com:
  * Abstraction of Serial / Wire commmunication
  * message :
- * 1. open BYTE 255
- * 2. adress BYTE 
- * 3. msg length BYTE
- * 4. data
- *      COMMAND
- *      DATA
+ * 1. type: OK | COMMAND | ERROR
+ * 2. receiver
+ * 3. command
+ * 4. data length
+ * 5. data
  */
  
-#ifndef Com_h
-#define Com_h
+#ifndef Connection_h
+#define Connection_h
 
 #define BAUD_RATE 57600
 
@@ -28,50 +27,17 @@
 
 #define STARTUP_DELAY_FACTOR 250 //in ms
 
-#define MESSAGE_DATA_SIZE 32 //max 128
-#define HEADER_LENGTH 4
-
-#define INDEX_TYPE     0
-#define INDEX_RECEIVER 1
-#define INDEX_COMMAND  2
-#define INDEX_LENGTH   3
-
-/* Header Codes */
-#define COMMAND     0xFF  // followed by commands
-#define OK          0x0F  // followed by return params
-#define ERROR       0x01  // followed by error code
-
 #define SLAVE_NEW   202 //returns OK + slave number
 
 #include <Wire.h>
 #include "WProgram.h"
-//DEBUG 
-#include "Rainbowduino.h"
+//DEBUG  #include "Rainbowduino.h"
+#include "ConnectionMessage.h"
 
  extern "C" {
  // callback function
      typedef void (*conCallbackFunction)(void);
  }
-
-class Message {
- public:
-   uint8_t data[MESSAGE_DATA_SIZE];
-   uint8_t writeIndex;
-   uint8_t readIndex;
-   
-   Message();
-   void consume( uint8_t dataByte );
-   void reset();
-   bool ready();
-   bool isError();
-   bool isOk();
-   bool isCommand();
-   bool is(uint8_t command);
-   uint8_t type();
-   uint8_t command();
-   uint8_t param();
-   uint8_t paramRead();
-};
  
 class Connection {
 public:
@@ -91,25 +57,19 @@ public:
   
   void registerPendingSlave();
   
-  void ok(uint8_t command, uint8_t param);
-  void command(uint8_t command, uint8_t param);
-  
-  //TODO
-  // void error(uint8_t command, uint8_t param);
-  // void command(uint8_t command, uint8_t param);
-  //void send(uint8_t type, uint8_t command, uint8_t param);
-  
-  
-  //TODO
-  void write(uint8_t data);
-  
+  void sendOk(uint8_t command, uint8_t param);
+  void sendCommand(uint8_t command, uint8_t param);
+  void sendError(uint8_t command, uint8_t param);
+  void send(uint8_t type, uint8_t command, uint8_t param);
+  void forwardMessage();
+
 //private: 
   conCallbackFunction onMessageAvailableCallback;
   
-  Message* inputMessage; // Buffer that holds the data 
-  Message* outputMessage; // Buffer that holds the data 
-  Message buffer1; // Buffer that holds the data 
-  Message buffer2; // Buffer that holds the data  
+  ConnectionMessage* inputMessage; // Buffer that holds the data 
+  ConnectionMessage* outputMessage; // Buffer that holds the data 
+  ConnectionMessage buffer1; // Buffer that holds the data 
+  ConnectionMessage buffer2; // Buffer that holds the data  
 };
 
 extern Connection Con;

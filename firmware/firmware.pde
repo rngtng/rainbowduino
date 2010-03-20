@@ -142,7 +142,7 @@ void execute() {
       param = Con.outputMessage->paramRead(); //read adress value
       return_value = NUM_ROWS;
       for(uint8_t row = 0; row < NUM_ROWS; row++) {
-        Con.write(Rainbowduino.get_frame_row(param, row));
+        //Con.write(Rainbowduino.get_frame_row(param, row));
       }
       break;
     case BUFFER_SAVE:    
@@ -175,7 +175,7 @@ void execute() {
       //send error
     break;
     }
-    Con.ok(command, return_value);
+    Con.sendOk(command, return_value);
 }
 
 

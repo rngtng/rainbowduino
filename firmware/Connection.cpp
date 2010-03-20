@@ -3,7 +3,7 @@
 */
 
 #include "Connection.h"
-
+#include "ConnectionMessage.h"
 #include "WProgram.h"
 
 #include <EEPROM.h>
@@ -26,13 +26,9 @@ void onReceiveMasterCallback(int howMany) {
     if( Con.slave_address_to_register == 0 )  Con.slave_address_to_register = command;
   }
   else {   //forward data to serial
-    //Serial.write(command);
-    //Serial.println(command, DEC);
-    //TODO send slave number???
-    //TODO send message length??
     while( howMany > 1 ) {
       command = Wire.receive();
-      //Serial.println( command, DEC);
+      Serial.write( command );
       howMany--;
     } 
   }
@@ -74,7 +70,7 @@ void Connection::begin() {
   while( i2c_address >= I2C_START_ADR && c > 0) {  
     // 5a. make call to master with static number.
     Wire.beginTransmission(I2C_MASTER_ADR);
-    Wire.send(I2C_CMD_HELLO);
+    Wire.send(I2C_CMD_HELLO); //TODO user proper Protocoll here???
     Wire.send(i2c_address);   //send adress where to respond to
     Wire.endTransmission();
     delay(delay_time2);
@@ -143,7 +139,7 @@ void Connection::registerPendingSlave() {
   Wire.endTransmission();
 
   //notify serial about new slave
-  command( SLAVE_NEW, last_slave_address);
+  sendCommand( SLAVE_NEW, last_slave_address);
   
   slave_address_to_register = 0;
 }
@@ -166,102 +162,56 @@ uint8_t Connection::process(uint8_t serialByte) {
   if( inputMessage->ready() ) {
     //message fully received
     //1. swap buffers
-    Message* tmpPointer = outputMessage;
+    ConnectionMessage* tmpPointer = outputMessage;
     outputMessage = inputMessage;
     
     //2. reset inputBuffer and read process
     inputMessage = tmpPointer;
     inputMessage->reset();
     //3. execute callback
+    if(inputMessage->receiver() == i2c_address) forwardMessage();
     if(onMessageAvailableCallback != NULL) (*onMessageAvailableCallback)();
   }
   //TODO if (bufferIndex >= bufferLastIndex) reset();
   return 10;
 }
 
-void Connection::write(uint8_t w) {
+void Connection::sendOk(uint8_t command, uint8_t param) {
+ send(OK, command, param);
 }
 
-void Connection::ok(uint8_t command, uint8_t param) {
+void Connection::sendCommand(uint8_t command, uint8_t param) {
+ send(COMMAND, command, param);
+}
+
+void Connection::sendError(uint8_t command, uint8_t param) {
+ send(ERROR, command, param);
+}
+
+void Connection::send(uint8_t type, uint8_t command, uint8_t param) {
   if( master ) {
 //    Serial.flush();
-      Serial.write(OK);
+      Serial.write(type);
       Serial.write((byte) 0); //as we are master!
       Serial.write(command);
       Serial.write(1); //two more to follow
       Serial.write(param);
   }
   else {
-    //TODO I2C
+    Wire.beginTransmission(I2C_MASTER_ADR);
+    Wire.send(type);
+    Wire.send(i2c_address);
+    Wire.send(command);
+    Wire.send(1);
+    Wire.send(param);
+    Wire.endTransmission();
   }
 }
 
-void Connection::command(uint8_t command, uint8_t param) {
-  if( master ) {
-//    Serial.flush();
-    Serial.write(COMMAND);
-    Serial.write((byte) 0); //as we are master!
-    Serial.write(command);
-    Serial.write(1); //two more to follow
-    Serial.write(param);
+void Connection::forwardMessage() {
+  Wire.beginTransmission(outputMessage->receiver());
+  for( uint8_t k = 0; k < outputMessage->totalLength(); k++) {
+      Wire.send(outputMessage->data[k]);
   }
-  else {
-    //TODO I2C
-  }
-}
-
-/*********************************************************/
-Message::Message() {
-  reset();
-}
-
-void Message::consume( uint8_t dataByte ){
-	if(ready()) return;
-	if( writeIndex == 0 && dataByte != COMMAND && dataByte != OK && dataByte != ERROR) return;
-  data[writeIndex++] = dataByte;
-}
-
-void Message::reset() {
-  writeIndex = 0;
-  readIndex = 0;
-}
-
-bool Message::ready() {
-return (writeIndex >= HEADER_LENGTH) && (writeIndex == (HEADER_LENGTH + data[INDEX_LENGTH]));
-}
-
-bool Message::isError() {
-  return type() == ERROR;
-}
-
-bool Message::isOk() {
-  return type() == OK;
-}
-
-bool Message::isCommand() {
-  return type() == COMMAND;
-}
-
-bool Message::is(uint8_t command) {
-  return ready() && data[INDEX_COMMAND] == command;
-}
-
-uint8_t Message::type() {
-  if( !ready() ) return 0;  
-  return data[INDEX_TYPE];
-}
-
-uint8_t Message::command() {
-  if( !ready() ) return 0;  
-  return data[INDEX_COMMAND];
-}
-
-uint8_t Message::param() {
-  if( !ready() ) return 0;  
-  return data[HEADER_LENGTH];
-}
-
-uint8_t Message::paramRead() {
-  if( !ready() ) return 0;
-  return data[HEADER_LENGTH + readIndex++];
+  Wire.endTransmission();
 }
