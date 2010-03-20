@@ -111,11 +111,6 @@ void Connection::beginMaster(uint8_t master_address, bool update_adress) {
   slave_address_to_register = 0;
   last_slave_address = I2C_SLAVE_ADR;
   
-  // inputMessage  = (Message*) malloc( sizeof(Message) ); //buffer1; //point to buffers
-  // inputMessage->reset();
-  // 
-  // outputMessage = (Message*) malloc( sizeof(Message) ); //buffer2; //point to buffers
-  // outputMessage->reset();
   inputMessage = &buffer1;
   outputMessage = &buffer2;
 }
@@ -165,11 +160,10 @@ void Connection::loop() {
 
 
 uint8_t Connection::process(uint8_t serialByte) {
-  Rainbowduino.set_frame_line(0,7,serialByte,0,0);
+  //Rainbowduino.set_frame_line(0,7,serialByte,0,0);
   inputMessage->consume(serialByte);
 
   if( inputMessage->ready() ) {
-    Rainbowduino.set_frame_line(0,7,serialByte,255,0);
     //message fully received
     //1. swap buffers
     Message* tmpPointer = outputMessage;
@@ -193,8 +187,8 @@ void Connection::ok(uint8_t command, uint8_t param) {
 //    Serial.flush();
       Serial.write(OK);
       Serial.write((byte) 0); //as we are master!
-      Serial.write(2); //two more to follow
       Serial.write(command);
+      Serial.write(1); //two more to follow
       Serial.write(param);
   }
   else {
@@ -207,8 +201,8 @@ void Connection::command(uint8_t command, uint8_t param) {
 //    Serial.flush();
     Serial.write(COMMAND);
     Serial.write((byte) 0); //as we are master!
-    Serial.write(2); //two more to follow
     Serial.write(command);
+    Serial.write(1); //two more to follow
     Serial.write(param);
   }
   else {
