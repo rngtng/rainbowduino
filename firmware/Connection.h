@@ -31,7 +31,7 @@
 
 #include <Wire.h>
 #include "WProgram.h"
-//DEBUG  #include "Rainbowduino.h"
+//DEBUG   #include "Rainbowduino.h"
 #include "ConnectionMessage.h"
 
  extern "C" {
@@ -47,12 +47,13 @@ public:
   volatile uint8_t i2c_address;
   volatile uint8_t slave_address_to_register;
   
+  Connection();
   void loop();
   void begin();
-  void beginMaster(uint8_t master_address = I2C_MASTER_ADR, bool update_adress = true);
-  void beginSlave(uint8_t slave_address, bool update_adress = true);
+  void beginMaster(uint8_t master_address = I2C_MASTER_ADR, bool initWire = true);
+  void beginSlave(uint8_t slave_address, bool initWire = true);
   void onMessageAvailable(conCallbackFunction newFunction);
-  uint8_t process(uint8_t serialByte);
+  void processMessage();
   bool available();
   
   void registerPendingSlave();

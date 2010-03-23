@@ -36,10 +36,22 @@ void onReceiveMasterCallback(int howMany) {
 
 //Slave I2C Callback
 void onReceiveSlaveCallback(int howMany) {
+  uint8_t serialByte;
   while( howMany > 0 ) {
-    Con.process( Wire.receive()  );
+    serialByte = Wire.receive();
+    Con.inputMessage->consume(serialByte);
     howMany--;
   }
+  //Rainbowduino.set_frame_line(0,3,255 - howMany,0,0);  
+}
+
+Connection::Connection() {
+  //Init default values
+  slave_address_to_register = 0;
+  last_slave_address = I2C_SLAVE_ADR;
+  
+  inputMessage = &buffer1;
+  outputMessage = &buffer2;
 }
 
 void Connection::begin() {
@@ -85,13 +97,13 @@ void Connection::begin() {
   }
 }
 
-void Connection::beginMaster(uint8_t master_address, bool update_adress) {
+void Connection::beginMaster(uint8_t master_address, bool initWire) {
   //6b. use master I2C address, start master mode, open serial
   i2c_address = master_address;
   Serial.begin(BAUD_RATE);
 
   //7. start new I2C with given address
-  if(update_adress) {
+  if(initWire) {
     Wire.begin(i2c_address);
   }
   else {
@@ -104,19 +116,16 @@ void Connection::beginMaster(uint8_t master_address, bool update_adress) {
   //8. save new adress to EEPROM
   EEPROM.write(I2C_EEPROM_ADR, i2c_address);
   
-  slave_address_to_register = 0;
-  last_slave_address = I2C_SLAVE_ADR;
-  
-  inputMessage = &buffer1;
-  outputMessage = &buffer2;
+  //9.
+  //TODO broadcast to all slave to reregister
 }
 
-void Connection::beginSlave(uint8_t slave_address, bool update_adress) {
+void Connection::beginSlave(uint8_t slave_address, bool initWire) {
   //6a. use slave I2C adress, start slave mode
   i2c_address = slave_address;
 
   //7. start new I2C with given address
-  if(update_adress) {
+  if(initWire) {
     Wire.begin(i2c_address);
   }
   else {
@@ -152,28 +161,34 @@ void Connection::onMessageAvailable(conCallbackFunction newFunction) {
 
 void Connection::loop() {  
   registerPendingSlave();
+  if( Serial.available() ) { 
+    uint8_t serialByte = Serial.read();
+//    Rainbowduino.set_frame_line(0,7,serialByte,0,0);
+    inputMessage->consume(serialByte);
+  }
+  processMessage();
 }  
 
 
-uint8_t Connection::process(uint8_t serialByte) {
-  //Rainbowduino.set_frame_line(0,7,serialByte,0,0);
-  inputMessage->consume(serialByte);
-
-  if( inputMessage->ready() ) {
-    //message fully received
-    //1. swap buffers
-    ConnectionMessage* tmpPointer = outputMessage;
-    outputMessage = inputMessage;
-    
-    //2. reset inputBuffer and read process
-    inputMessage = tmpPointer;
-    inputMessage->reset();
-    //3. execute callback
-    if(inputMessage->receiver() == i2c_address) forwardMessage();
-    if(onMessageAvailableCallback != NULL) (*onMessageAvailableCallback)();
+void Connection::processMessage() {
+  if( !inputMessage->ready() ) return;
+  //message fully received
+  //1. swap buffers
+  ConnectionMessage* tmpPointer = outputMessage;
+  outputMessage = inputMessage;
+  
+  //2. reset inputBuffer and read process
+  inputMessage = tmpPointer;
+  inputMessage->reset();
+  //3. execute callback
+  if(master && outputMessage->receiver() > i2c_address) {
+    forwardMessage();
+    //Rainbowduino.set_frame_line(0,7,0,0,255);
   }
-  //TODO if (bufferIndex >= bufferLastIndex) reset();
-  return 10;
+  else {
+    if(onMessageAvailableCallback != NULL) (*onMessageAvailableCallback)();
+//    Rainbowduino.set_frame_line(0,7,0,255,0);
+  }
 }
 
 void Connection::sendOk(uint8_t command, uint8_t param) {
@@ -211,7 +226,9 @@ void Connection::send(uint8_t type, uint8_t command, uint8_t param) {
 void Connection::forwardMessage() {
   Wire.beginTransmission(outputMessage->receiver());
   for( uint8_t k = 0; k < outputMessage->totalLength(); k++) {
-      Wire.send(outputMessage->data[k]);
+      uint8_t serialByte = outputMessage->data[k];
+      //Rainbowduino.set_frame_line(0,3,0,serialByte,k);
+      Wire.send(serialByte);
   }
   Wire.endTransmission();
 }
