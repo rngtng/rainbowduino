@@ -10,6 +10,7 @@ package com.rngtng.rainbowduino;
 import java.io.IOException;
 
 import gnu.io.SerialPortEvent;
+import processing.core.PApplet;
 import processing.serial.Serial;
 
 /**
@@ -45,7 +46,8 @@ public class RainbowduinoSerial extends Serial {
 			while( input.available() > 0 ) {
 				message.consume( input.read() );
 				if( message.ready() ) {
-					this.rainbowduino.messageAvailable( message );	
+					PApplet.println(message.toString());
+					this.rainbowduino.messageAvailable( message );						
 					message = new RainbowduinoMessage();	
 				}
 			}

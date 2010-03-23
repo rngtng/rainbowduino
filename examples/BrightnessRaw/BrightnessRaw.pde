@@ -6,39 +6,42 @@ void setup() {
   p = new  Serial(this, Serial.list()[0], 57600);
 }
 
-void draw() {
+int as = 0;
 
-  cmd( 252 ); //ping
-  delay(5000);
+void draw() {
+  delay(120);
+  cmd( as, 252 ); //ping
+  delay(120);
 
   while( p.available() > 0) {
     println("Received: " + p.read());
   }
   
-  // cmd( 208, 1); // set brightess 1
-  // delay(500);
-  // 
-  // cmd( 208, 16); // set brightess 16
-  // delay(50);  
+cmd( as, 208, 1); // set brightess 1
+delay(150);
+
+cmd( as, 208, 16); // set brightess 16
+delay(150);  
+
 }
 
-void cmd( int cmd ) {
+void cmd( int r, int cmd ) {
   send( new int[]{ 
-    255, 0, cmd, 0 }
+    255, r, cmd, 0 }
   );
 }
 
 
-void cmd( int cmd, int data ) {
+void cmd( int r, int cmd, int data ) {
   send( new int[]{ 
-    255, 0, cmd, 1, data   }
+    255, r, cmd, 1, data   }
   );
 }
 
 void send( int[] data ) {
   for(int k = 0; k < data.length; k++) {
     p.write(data[k]);
-    delay(1000);
+    delay(100);
   }
   //println("sending done"); 
 }

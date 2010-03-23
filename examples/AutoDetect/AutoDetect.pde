@@ -19,7 +19,7 @@ void draw() {
 }
 
 
-void rainbowuinoAvailable(Rainbowduino _rainbowduino) {
+void rainbowduinoAvailable(Rainbowduino _rainbowduino) {
   rainbowduino = _rainbowduino;
   println("found");  
   
@@ -28,7 +28,7 @@ void rainbowuinoAvailable(Rainbowduino _rainbowduino) {
   sc.playNote(80, 100, 1.0);
 }
 
-void rainbowuinoUnavailable(Rainbowduino _rainbowduino) {
+void rainbowduinoUnavailable(Rainbowduino _rainbowduino) {
   rainbowduino = null;
   println("lost");
   

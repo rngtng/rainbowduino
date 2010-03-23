@@ -55,7 +55,7 @@ public class RainbowduinoDetector extends Thread {
 	}	
 
 	/***************************************************************/
-	
+
 	RainbowduinoDetector(PApplet _app) {
 		this.app = _app;
 		PApplet.println( "Rainbowduino Version 1");
@@ -120,8 +120,8 @@ public class RainbowduinoDetector extends Thread {
 	public static boolean removeListener(PApplet _app, RainbowduinoListener listener) {
 		return RainbowduinoDetector.init(_app).addListener(listener);
 	}
-	
-	
+
+
 	/* -- Port Handling -- */
 
 	/**
@@ -188,6 +188,15 @@ public class RainbowduinoDetector extends Thread {
 		//now, as rainbowudino is no found, increase polling time
 		this.thread_sleep = START_THREAD_SLEEP;
 	}	
+
+	void messageAvailable(RainbowduinoMessage message) {
+		for(Rainbowduino rainbowduino : rainbowduinos) {
+			if(rainbowduino.slaveNr == message.receiver()) {
+				rainbowduino.messageAvailable(message);
+				return;
+			}		
+		}			
+	}
 
 	private void sleep(int ms) {
 		try {

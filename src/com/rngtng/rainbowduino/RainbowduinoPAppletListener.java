@@ -19,7 +19,7 @@ You should have received a copy of the GNU Lesser General
 Public License along with this library; if not, write to the
 Free Software Foundation, Inc., 59 Temple Place, Suite 330,
 Boston, MA  02111-1307  USA
-*/
+ */
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,19 +27,19 @@ import java.lang.reflect.Method;
 import processing.core.PApplet;
 
 /**
-* A wrapper class to to PApplet into a LaunchpadListerner for generic Listener handling 
-*
-* @author rngtng - Tobias Bielohlawek
-*
-*/
+ * A wrapper class to to PApplet into a LaunchpadListerner for generic Listener handling 
+ *
+ * @author rngtng - Tobias Bielohlawek
+ *
+ */
 public class RainbowduinoPAppletListener implements RainbowduinoListener {
 
 	PApplet app;
 
 	private Method availableMethod;
 	private Method unavailableMethod;
-	
-	
+
+
 	RainbowduinoPAppletListener(PApplet _app) {
 		app = _app;
 		getMethods(app);
@@ -49,16 +49,16 @@ public class RainbowduinoPAppletListener implements RainbowduinoListener {
 	protected void getMethods(Object parent) {
 		Class[] argsButton = new Class[] {Rainbowduino.class};
 		try {
-			availableMethod = parent.getClass().getDeclaredMethod( "rainbowuinoAvailable", argsButton);
+			availableMethod = parent.getClass().getDeclaredMethod( "rainbowduinoAvailable", argsButton);
 		} catch (NoSuchMethodException e) {
 			// not a big deal if they aren't implemented
 		}
 		try {
-			unavailableMethod = parent.getClass().getDeclaredMethod( "rainbowuinoUnavailable", argsButton);
+			unavailableMethod = parent.getClass().getDeclaredMethod( "rainbowduinoUnavailable", argsButton);
 		} catch (NoSuchMethodException e) {
 			// not a big deal if they aren't implemented
 		}
-    }
+	}
 
 	public void rainbowduinoAvailable(Rainbowduino rainbowduino) {
 		if (availableMethod == null) return;			
@@ -85,5 +85,5 @@ public class RainbowduinoPAppletListener implements RainbowduinoListener {
 			e.printStackTrace();
 		}  		
 	}
-	
+
 }
