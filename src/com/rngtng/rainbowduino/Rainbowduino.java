@@ -379,10 +379,10 @@ public class Rainbowduino implements RCodes {
 		//flush buffer		//TODO why this here??
 		//		if( isConnected() ) serialPort.clear();		
 		send(commandCode);
-		
+
 		//send length
 		send( ( data != null) ? data.length : 0 );
-		
+
 		//send command
 		if( data != null )  {
 			for( int k = 0; k < data.length; k++ ) {
@@ -469,7 +469,11 @@ public class Rainbowduino implements RCodes {
 			Rainbowduino newRainbowduino = new Rainbowduino(this, _message.param());
 			RainbowduinoDetector.init(this.app).registerRainbowduino(newRainbowduino);
 			return;
-		}	
+		}
+		if( _message.receiver() != slaveNr) {
+			RainbowduinoDetector.init(this.app).messageAvailable(_message);
+			return;
+		}
 		this.responseMessage = _message;
 	}
 
