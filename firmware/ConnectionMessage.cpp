@@ -18,6 +18,7 @@ void ConnectionMessage::consume( uint8_t dataByte ){
 void ConnectionMessage::reset() {
   writeIndex = 0;
   readIndex = 0;
+  data[INDEX_LENGTH] = 0;
 }
 
 bool ConnectionMessage::ready() {
@@ -66,6 +67,5 @@ uint8_t ConnectionMessage::paramRead() {
 }
 
 uint8_t ConnectionMessage::totalLength() {
- if(writeIndex >= HEADER_LENGTH) return HEADER_LENGTH + data[INDEX_LENGTH];
- return HEADER_LENGTH;
+ return HEADER_LENGTH + data[INDEX_LENGTH]; 
 }
