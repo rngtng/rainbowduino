@@ -26,6 +26,7 @@ void onReceiveMasterCallback(int howMany) {
     if( Con.slave_address_to_register == 0 )  Con.slave_address_to_register = command;
   }
   else {   //forward data to serial
+    Serial.write( command );
     while( howMany > 1 ) {
       command = Wire.receive();
       Serial.write( command );
@@ -42,7 +43,7 @@ void onReceiveSlaveCallback(int howMany) {
     Con.inputMessage->consume(serialByte);
     howMany--;
   }
-  //Rainbowduino.set_frame_line(0,3,255 - howMany,0,0);  
+  //Rainbowduino.set_frame_line(0,7,0,serialByte,serialByte);  
 }
 
 Connection::Connection() {
@@ -163,7 +164,7 @@ void Connection::loop() {
   registerPendingSlave();
   if( Serial.available() ) { 
     uint8_t serialByte = Serial.read();
-//    Rainbowduino.set_frame_line(0,7,serialByte,0,0);
+    //Rainbowduino.set_frame_line(0,7,serialByte,0,0);
     inputMessage->consume(serialByte);
   }
   processMessage();
@@ -187,16 +188,16 @@ void Connection::processMessage() {
   }
   else {
     if(onMessageAvailableCallback != NULL) (*onMessageAvailableCallback)();
-//    Rainbowduino.set_frame_line(0,7,0,255,0);
+    //Rainbowduino.set_frame_line(0,7,0,255,0);
   }
 }
 
-void Connection::sendOk(uint8_t command, uint8_t param) {
- send(OK, command, param);
+void Connection::sendCommand(uint8_t command, uint8_t param) {
+  send(COMMAND, command, param);
 }
 
-void Connection::sendCommand(uint8_t command, uint8_t param) {
- send(COMMAND, command, param);
+void Connection::sendResponse(uint8_t command, uint8_t param) {
+ send(RESPONSE, command, param);
 }
 
 void Connection::sendError(uint8_t command, uint8_t param) {
@@ -209,7 +210,7 @@ void Connection::send(uint8_t type, uint8_t command, uint8_t param) {
       Serial.write(type);
       Serial.write((byte) 0); //as we are master!
       Serial.write(command);
-      Serial.write(1); //two more to follow
+      Serial.write(1); //one more to follow
       Serial.write(param);
   }
   else {

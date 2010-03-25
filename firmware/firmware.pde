@@ -46,8 +46,8 @@ void setup() {
 
 void loop() {
   Con.loop();
-  Rainbowduino.set_frame_pixel(0,0,0,1,Con.master,Con.master);
-  // Rainbowduino.set_frame_line(0,1,Con.i2c_address,Con.last_slave_address, Con.slave_address_to_register);  
+ // Rainbowduino.set_frame_pixel(0,0,0,1,Con.master,Con.master);
+ // Rainbowduino.set_frame_line(0,1,Con.i2c_address,0,0); //Con.last_slave_address, Con.slave_address_to_register);  
   
 //  Rainbowduino.set_frame_line(0,5,Con.inputMessage->type(),Con.inputMessage->command(), Con.inputMessage->param());
 //  Rainbowduino.set_frame_line(0,6,Con.outputMessage->type(),Con.outputMessage->command(), Con.outputMessage->param());
@@ -109,14 +109,13 @@ void execute() {
       break;
     case STOP:
       running = false;
-      return_value = Rainbowduino.get_current_frame_nr();
       break;
     case START:
       running = true;
-      return_value = Rainbowduino.get_current_frame_nr();
       break;            
     case FRAME_SET:
       Rainbowduino.set_current_frame_nr(Con.outputMessage->paramRead());
+      break;
     case FRAME_GET:
       return_value = Rainbowduino.get_current_frame_nr();
       break;
@@ -124,6 +123,7 @@ void execute() {
       /* Brightness Control */
     case BRIGHTNESS_SET:
       Rainbowduino.level = Con.outputMessage->paramRead();
+      break;
     case BRIGHTNESS_GET:
       return_value = Rainbowduino.level;
       break;
@@ -131,7 +131,6 @@ void execute() {
       /* Buffer Control */
     case BUFFER_SET_AT:
       param = Con.outputMessage->paramRead(); //read adress value
-      return_value = NUM_ROWS;
       for(uint8_t row = 0; row < NUM_ROWS; row++) {
         Rainbowduino.set_frame_row(param, row, Con.outputMessage->paramRead());
       }
@@ -140,15 +139,16 @@ void execute() {
       param = Con.outputMessage->paramRead(); //read adress value
       return_value = NUM_ROWS;
       for(uint8_t row = 0; row < NUM_ROWS; row++) {
-        //Con.write(Rainbowduino.get_frame_row(param, row));
+        //TODO Con.write(Rainbowduino.get_frame_row(param, row));
       }
       break;
     case BUFFER_SAVE:    
       save_to_eeprom(); 
-      return_value = Rainbowduino.get_num_frames();
-      break;      
-    case BUFFER_LOAD:      
+      break;
+    case BUFFER_LOAD:
       load_from_eeprom();
+      return_value = Rainbowduino.get_num_frames();
+      break;
     case BUFFER_LENGTH:      
       return_value = Rainbowduino.get_num_frames();
       break;            
@@ -156,24 +156,23 @@ void execute() {
       /* Speed Control */
     case SPEED_SET:
       set_frame_delay(Con.outputMessage->paramRead());
+      break;
     case SPEED_GET:
       return_value = frame_delay;
       break;
     case SPEED_INC: 
       if(frame_delay > SPEED_FACTOR) frame_delay -= SPEED_FACTOR;
       set_frame_delay(frame_delay);
-      return_value = frame_delay;
       break;
     case SPEED_DEC:  
       frame_delay += SPEED_FACTOR;
       set_frame_delay(frame_delay);
-      return_value = frame_delay;
       break;    
     default:
       //send error
     break;
     }
-    Con.sendOk(command, return_value);
+    if(Con.outputMessage->isRequest() ) Con.sendResponse(command, return_value);
 }
 
 

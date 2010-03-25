@@ -45,8 +45,7 @@ public class RainbowduinoSerial extends Serial {
 		try {
 			while( input.available() > 0 ) {
 				message.consume( input.read() );
-				if( message.ready() ) {
-					PApplet.println(message.toString());
+				if( message.ready() ) {					
 					this.rainbowduino.messageAvailable( message );						
 					message = new RainbowduinoMessage();	
 				}

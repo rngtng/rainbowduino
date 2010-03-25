@@ -8,7 +8,7 @@ import processing.serial.Serial;
 public class RainbowduinoDetector extends Thread {
 
 	final int START_THREAD_SLEEP = 3000; //milliseconds
-	final int THREAD_SLEEP = 10000; //milliseconds
+	final int THREAD_SLEEP = 100000; //milliseconds
 
 	static RainbowduinoDetector rainbowduinoDetector; 
 
@@ -164,7 +164,7 @@ public class RainbowduinoDetector extends Thread {
 		return null;
 	}
 
-	void registerRainbowduino(Rainbowduino rainbowduino) {
+	public void registerRainbowduino(Rainbowduino rainbowduino) {
 		if(rainbowduino == null || rainbowduinos.contains(rainbowduino)) return;
 
 		rainbowduinos.add(rainbowduino);
@@ -172,7 +172,7 @@ public class RainbowduinoDetector extends Thread {
 			listener.rainbowduinoAvailable(rainbowduino);
 		}			
 
-		//now, as rainbowudino is found, lower polling time
+		//now, as rainbowduino is found, lower polling time
 		this.thread_sleep = THREAD_SLEEP;
 	}
 
