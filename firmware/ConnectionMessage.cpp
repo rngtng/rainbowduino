@@ -11,7 +11,7 @@ ConnectionMessage::ConnectionMessage() {
 
 void ConnectionMessage::consume( uint8_t dataByte ){
 	if(ready()) return;
-	if( writeIndex == 0 && dataByte != COMMAND && dataByte != OK && dataByte != ERROR) return;
+	if( writeIndex == 0 && dataByte != COMMAND && dataByte != REQUEST && dataByte != RESPONSE && dataByte != ERROR) return;
   data[writeIndex++] = dataByte;
 }
 
@@ -25,16 +25,20 @@ bool ConnectionMessage::ready() {
 return (writeIndex == totalLength());
 }
 
-bool ConnectionMessage::isError() {
-  return type() == ERROR;
-}
-
-bool ConnectionMessage::isOk() {
-  return type() == OK;
-}
-
 bool ConnectionMessage::isCommand() {
   return type() == COMMAND;
+}
+
+bool ConnectionMessage::isRequest() {
+  return type() == REQUEST;
+}
+
+bool ConnectionMessage::isResponse() {
+  return type() == RESPONSE;
+}
+
+bool ConnectionMessage::isError() {
+  return type() == ERROR;
 }
 
 bool ConnectionMessage::is(uint8_t command) {

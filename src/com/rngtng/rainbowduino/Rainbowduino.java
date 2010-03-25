@@ -152,7 +152,6 @@ public class Rainbowduino implements RCodes {
 	 */
 	public int apiVersion() {	   
 		try {
-			sendCommand(API_VERSION);
 			return receive(API_VERSION);
 		} catch (RainbowduinoError e) {
 			e.print();
@@ -166,8 +165,7 @@ public class Rainbowduino implements RCodes {
 	 * TODO: add time??
 	 */
 	public boolean ping() {
-		try {
-			sendCommand(PING);
+		try {		
 			receive(PING);
 			return true;
 		} catch (RainbowduinoError e) {
@@ -211,7 +209,6 @@ public class Rainbowduino implements RCodes {
 	 */
 	public int frameGet() {	   
 		try {
-			sendCommand(FRAME_GET);
 			return receive(FRAME_GET);
 		} catch (RainbowduinoError e) {
 			e.print();
@@ -232,8 +229,7 @@ public class Rainbowduino implements RCodes {
 	 */
 	public int brightnessGet() {	   
 		try {
-			sendCommand(BRIGHTNESS_GET);
-			return receive(FRAME_GET);
+			return receive(BRIGHTNESS_GET);
 		} catch (RainbowduinoError e) {
 			e.print();
 		}		
@@ -269,8 +265,7 @@ public class Rainbowduino implements RCodes {
 	 */
 	public int[] bufferGetAt(int adr) {	 		
 		try {
-			sendCommand(BUFFER_GET_AT, adr);
-			int size = receive(BUFFER_GET_AT);
+			int size = receive(BUFFER_GET_AT, adr);
 			PApplet.println("Size :" + size);
 			int[] content = new int[size];
 			for(int i = 0; i < size; i++) {			
@@ -292,7 +287,6 @@ public class Rainbowduino implements RCodes {
 	 */
 	public int bufferLength() {
 		try {
-			sendCommand(BUFFER_LENGTH);
 			return receive(BUFFER_LENGTH);
 		} catch (RainbowduinoError e) {
 			e.print();
@@ -312,7 +306,6 @@ public class Rainbowduino implements RCodes {
 	 */
 	public int bufferLoad() {
 		try {
-			sendCommand(BUFFER_LOAD);
 			return receive(BUFFER_LOAD);
 		} catch (RainbowduinoError e) {
 			e.print();
@@ -333,7 +326,6 @@ public class Rainbowduino implements RCodes {
 	 */
 	public int speedGet() {	   
 		try {
-			sendCommand(SPEED_GET);
 			return receive(SPEED_GET);
 		} catch (RainbowduinoError e) {
 			e.print();
@@ -357,33 +349,26 @@ public class Rainbowduino implements RCodes {
 
 	/* +++++++++++++++++++ */
 	private void sendCommand(int commandCode) {
-		this.master.sendMessage(slaveNr, commandCode, null);
+		this.responseMessage = null;
+		this.master.sendMessage(RainbowduinoMessage.COMMAND, slaveNr, commandCode, null);
 	}
 
 	private void sendCommand(int commandCode, int param) {
-		this.master.sendMessage(slaveNr, commandCode, new int[]{param});
+		this.responseMessage = null;
+		this.master.sendMessage(RainbowduinoMessage.COMMAND, slaveNr, commandCode, new int[]{param});
 	}
 
-	private void sendCommand(int commandCode, int[] data) {	
-		this.master.sendMessage(slaveNr, commandCode, data);
+	private void sendCommand(int commandCode, int[] data) {
+		this.responseMessage = null;
+		this.master.sendMessage(RainbowduinoMessage.COMMAND, slaveNr, commandCode, data);
 	}	
 
-	private void sendMessage(int receiverNr, int commandCode, int[] data) {		
-		//init command
-		this.responseMessage = null;
-		send(COMMAND);
-
-		//send receiverNr
-		send(receiverNr);
-
-		//flush buffer		//TODO why this here??
-		//		if( isConnected() ) serialPort.clear();		
+	private void sendMessage(int type, int receiverNr, int commandCode, int[] data) {		
+		send(type);
+		send(receiverNr); 		
 		send(commandCode);
-
-		//send length
 		send( ( data != null) ? data.length : 0 );
 
-		//send command
 		if( data != null )  {
 			for( int k = 0; k < data.length; k++ ) {
 				send(data[k]);
@@ -392,21 +377,21 @@ public class Rainbowduino implements RCodes {
 		sleep(10); //TODO why this???
 	}
 
-	private int receive(int command) throws RainbowduinoError {		
+	private int receive(int commandCode) throws RainbowduinoError {
+		return receive(commandCode, -1);
+	}
+	
+	private int receive(int commandCode, int param) throws RainbowduinoError {		
 		//wait for response code
-		try {			
+		try {						
+			sendMessage(RainbowduinoMessage.REQUEST, slaveNr, commandCode, ( param > -1 ) ? new int[]{param} : null);
 			waitForMessage();
-
-			switch(this.responseMessage.type()) {
-			case ERROR:
-				//return error code
-				throw new RainbowduinoError(responseMessage.param());							
-			case OK:
-				//return ok code				
-				if(responseMessage.is(command)) return responseMessage.paramRead();
-			default:
-				throw new RainbowduinoError(ERROR_MISSMATCH);
+			PApplet.println("message done");
+			if( this.responseMessage.isError() ) throw new RainbowduinoError(responseMessage.param());
+			if( this.responseMessage.isResponse() ) { 
+				if(responseMessage.is(commandCode)) return responseMessage.paramRead();
 			}
+			throw new RainbowduinoError(ERROR_MISSMATCH);
 		}
 		catch( RainbowduinoTimeOut e) {  
 			throw new RainbowduinoError(ERROR_TIME_OUT);
@@ -454,9 +439,9 @@ public class Rainbowduino implements RCodes {
 	}
 
 	private int waitForMessage(int timeout) throws RainbowduinoTimeOut {
-		if(!isConnected()) throw new RainbowduinoTimeOut();		
+		//if(!isConnected()) throw new RainbowduinoTimeOut();		
 		while( timeout > 0  && responseMessage == null) {
-			//print(".");
+			PApplet.print(".");
 			sleep(100); //in ms
 			timeout--;
 			if(timeout == 0) throw new RainbowduinoTimeOut();
@@ -465,15 +450,20 @@ public class Rainbowduino implements RCodes {
 	}
 
 	public void messageAvailable( RainbowduinoMessage _message ) {
+		PApplet.print("R " + slaveNr + " got Message: " + _message.toString());
 		if(_message.is(SLAVE_NEW)) {
+			PApplet.println(" - registered");
 			Rainbowduino newRainbowduino = new Rainbowduino(this, _message.param());
-			RainbowduinoDetector.init(this.app).registerRainbowduino(newRainbowduino);
+			//if( newRainbowduino.ping() ) 
+				RainbowduinoDetector.init(this.app).registerRainbowduino(newRainbowduino);
 			return;
 		}
 		if( _message.receiver() != slaveNr) {
-			RainbowduinoDetector.init(this.app).messageAvailable(_message);
+			PApplet.println(" - forwarded");			
+			RainbowduinoDetector.init(this.app).messageAvailable(_message);			
 			return;
 		}
+		PApplet.println(" - consumed");		
 		this.responseMessage = _message;
 	}
 

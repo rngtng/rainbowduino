@@ -27,11 +27,12 @@
 
 #define STARTUP_DELAY_FACTOR 250 //in ms
 
-#define SLAVE_NEW   202 //returns OK + slave number
+#define SLAVE_NEW 202 // param Slave nr
 
 #include <Wire.h>
 #include "WProgram.h"
-//DEBUG   #include "Rainbowduino.h"
+//DEBUG   
+#include "Rainbowduino.h"
 #include "ConnectionMessage.h"
 
  extern "C" {
@@ -58,7 +59,7 @@ public:
   
   void registerPendingSlave();
   
-  void sendOk(uint8_t command, uint8_t param);
+  void sendResponse(uint8_t command, uint8_t param);
   void sendCommand(uint8_t command, uint8_t param);
   void sendError(uint8_t command, uint8_t param);
   void send(uint8_t type, uint8_t command, uint8_t param);

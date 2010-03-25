@@ -16,7 +16,8 @@
 
 /* Header Codes */
 #define COMMAND     0xFF  // followed by commands
-#define OK          0x0F  // followed by return params
+#define REQUEST     0xFE  // followed by commands
+#define RESPONSE    0x0F  // followed by return params
 #define ERROR       0x01  // followed by error code
 
 #define INDEX_TYPE     0
@@ -36,9 +37,10 @@ class ConnectionMessage {
    void consume( uint8_t dataByte );
    void reset();
    bool ready();
-   bool isError();
-   bool isOk();
    bool isCommand();
+   bool isRequest();
+   bool isResponse();
+   bool isError();
    bool is(uint8_t command);
    uint8_t type();
    uint8_t receiver();
