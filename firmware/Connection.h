@@ -18,7 +18,8 @@
 #define I2C_SLAVE_ADR 10
 
 #define I2C_CMD_HELLO 23
-#define I2C_CMD_OK 42
+#define I2C_CMD_OK    42
+#define I2C_CMD_RESET 254 //see RCodes -> RESET
 
 #define I2C_WAIT_FOR_ADDRESS_TIMEOUT 30 //ms
 #define I2C_WAIT_FOR_ADDRESS_RETRYS 3 //number of retrys to get an slave adress
@@ -37,9 +38,10 @@
 
  extern "C" {
  // callback function
-     typedef void (*conCallbackFunction)(void);
+     typedef void (*conCallbackFunction)(void);     
  }
- 
+
+
 class Connection {
 public:
   bool master;
@@ -50,7 +52,7 @@ public:
   
   Connection();
   void loop();
-  void begin();
+  void begin(bool initWire = true);
   void beginMaster(uint8_t master_address = I2C_MASTER_ADR, bool initWire = true);
   void beginSlave(uint8_t slave_address, bool initWire = true);
   void onMessageAvailable(conCallbackFunction newFunction);
@@ -64,7 +66,7 @@ public:
   void sendError(uint8_t command, uint8_t param);
   void send(uint8_t type, uint8_t command, uint8_t param);
   void forwardMessage();
-
+  
 //private: 
   conCallbackFunction onMessageAvailableCallback;
   

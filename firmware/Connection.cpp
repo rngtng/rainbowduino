@@ -55,7 +55,7 @@ Connection::Connection() {
   outputMessage = &buffer2;
 }
 
-void Connection::begin() {
+void Connection::begin(bool initWire) {
   master = false;
   i2c_address = 0;
 
@@ -72,7 +72,13 @@ void Connection::begin() {
   }
   // 3. open I2C connection with I2C_START_ADR as offset
   i2c_address = old_i2c_address + I2C_START_ADR;  
-  Wire.begin(i2c_address);
+
+  if(initWire) {
+    Wire.begin(i2c_address);
+  }
+  else {
+    TWAR = i2c_address << 1; // twi_setAddress
+  }
 
   // 4. register Callback fnc
   Wire.onReceive(onReceiveInitCallback);
@@ -117,8 +123,15 @@ void Connection::beginMaster(uint8_t master_address, bool initWire) {
   //8. save new adress to EEPROM
   EEPROM.write(I2C_EEPROM_ADR, i2c_address);
   
-  //9.
-  //TODO broadcast to all slave to reregister
+  //9. broadcast to all slaves to reset and register
+  for( int slave_adr = I2C_SLAVE_ADR; slave_adr < I2C_SLAVE_ADR + 32; slave_adr++ ) {
+    Wire.beginTransmission(slave_adr); //BROADCAST
+    Wire.send(COMMAND);
+    Wire.send(slave_adr);
+    Wire.send(I2C_CMD_RESET);
+    Wire.send(0);  //no params
+    Wire.endTransmission();
+  }
 }
 
 void Connection::beginSlave(uint8_t slave_address, bool initWire) {
@@ -151,6 +164,7 @@ void Connection::registerPendingSlave() {
   //notify serial about new slave
   sendCommand( SLAVE_NEW, last_slave_address);
   
+  //TODO: remember slave???
   slave_address_to_register = 0;
 }
 
