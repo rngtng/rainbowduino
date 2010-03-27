@@ -9,20 +9,34 @@ void setup() {
 int as =11;
 
 void draw() {
-  delay(120);
+  //cmd( 0, 254 ); 
+  //delay(4000);
+  /*
+  cmdSet( 0 );
+delay(1000);
+cmd( 0, 236 ); 
+delay(1000);
+  */
+/*  delay(120);
   cmd( as, 252 ); //ping
   delay(1);
 
-read();
+read(); */
   
-cmd( as, 208, 1); // set brightess 1
-delay(15);
+cmd( 0, 208, 1); // set brightess 1  
+cmd( 11, 208, 1); // set brightess 1
+cmd( 12, 208, 1); // set brightess 1
+cmd( 13, 208, 1); // set brightess 1
+delay(250);
 
-read();
+//read();
 
-cmd( as, 208, 16); // set brightess 16
-delay(15);  
-read();
+cmd( 0, 208, 16); // set brightess 16
+cmd( 11, 208, 16); // set brightess 16
+cmd( 12, 208, 16); // set brightess 16
+cmd( 13, 208, 16); // set brightess 16
+delay(250);  
+//read();
 }
 
 void cmd( int r, int cmd ) {
@@ -38,10 +52,15 @@ void cmd( int r, int cmd, int data ) {
   );
 }
 
+void cmdSet( int r ) {
+  send( new int[]{ 
+    255, r, 246, 25, 0, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255 }
+  );
+}
+
 void send( int[] data ) {
   for(int k = 0; k < data.length; k++) {
     p.write(data[k]);
-    delay(10);
   }
   //println("sending done"); 
 }

@@ -51,7 +51,7 @@ void RainbowduinoDriver::reset() {
   current_frame_nr = 0;
   current_row = 0;
   current_level = 0;
-  num_frames = 0;
+  num_frames = 1;
 }
 
 uint8_t RainbowduinoDriver::get_num_frames() {
