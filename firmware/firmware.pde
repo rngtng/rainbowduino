@@ -41,13 +41,14 @@ void setup() {
   
   reset();
   //load_from_eeprom();
-  start();
+  //start();
 }
 
 void loop() {
   Con.loop();
- // Rainbowduino.set_frame_pixel(0,0,0,1,Con.master,Con.master);
- // Rainbowduino.set_frame_line(0,1,Con.i2c_address,0,0); //Con.last_slave_address, Con.slave_address_to_register);  
+
+  Rainbowduino.set_frame_pixel(0,0,0,1,Con.master,Con.master);
+  Rainbowduino.set_frame_line(0,1,Con.i2c_address,0,0); //Con.last_slave_address, Con.slave_address_to_register);  
   
 //  Rainbowduino.set_frame_line(0,5,Con.inputMessage->type(),Con.inputMessage->command(), Con.inputMessage->param());
 //  Rainbowduino.set_frame_line(0,6,Con.outputMessage->type(),Con.outputMessage->command(), Con.outputMessage->param());
@@ -103,9 +104,9 @@ void execute() {
       break;
 
     case RESET:
-      load_from_eeprom();
+      Con.begin(false);
+      //load_from_eeprom();
       reset();
-      return_value = Rainbowduino.get_current_frame_nr();
       break;
     case STOP:
       running = false;
@@ -199,3 +200,4 @@ void load_from_eeprom() {
     }
   }
 }
+  
