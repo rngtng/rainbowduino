@@ -32,8 +32,7 @@
 
 #include <Wire.h>
 #include "WProgram.h"
-//DEBUG   
-#include "Rainbowduino.h"
+//DEBUG    #include "Rainbowduino.h"
 #include "ConnectionMessage.h"
 
  extern "C" {

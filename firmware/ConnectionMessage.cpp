@@ -9,9 +9,9 @@ ConnectionMessage::ConnectionMessage() {
   reset();
 }
 
-void ConnectionMessage::consume( uint8_t dataByte ){
+void ConnectionMessage::consume(uint8_t dataByte){
 	if(ready()) return;
-	if( writeIndex == 0 && dataByte != COMMAND && dataByte != REQUEST && dataByte != RESPONSE && dataByte != ERROR) return;
+	if(writeIndex == 0 && dataByte != COMMAND && dataByte != REQUEST && dataByte != RESPONSE && dataByte != ERROR) return;
   data[writeIndex++] = dataByte;
 }
 
@@ -46,27 +46,27 @@ bool ConnectionMessage::is(uint8_t command) {
 }
 
 uint8_t ConnectionMessage::type() {
-  if( !ready() ) return 0;  
+  if(!ready()) return 0;  
   return data[INDEX_TYPE];
 }
 
 uint8_t ConnectionMessage::receiver() {
-  if( !ready() ) return 0;  
+  if(!ready()) return 0;  
   return data[INDEX_RECEIVER];
 }
 
 uint8_t ConnectionMessage::command() {
-  if( !ready() ) return 0;  
+  if(!ready()) return 0;  
   return data[INDEX_COMMAND];
 }
 
 uint8_t ConnectionMessage::param() {
-  if( !ready() ) return 0;  
+  if(!ready()) return 0;  
   return data[HEADER_LENGTH];
 }
 
 uint8_t ConnectionMessage::paramRead() {
-  if( !ready() ) return 0;
+  if(!ready()) return 0;
   return data[HEADER_LENGTH + readIndex++];
 }
 
