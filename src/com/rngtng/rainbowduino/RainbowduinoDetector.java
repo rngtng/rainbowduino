@@ -58,7 +58,7 @@ public class RainbowduinoDetector extends Thread {
 
 	RainbowduinoDetector(PApplet _app) {
 		this.app = _app;
-		PApplet.println( "Rainbowduino Version 1");
+		PApplet.println( "Rainbowduino Version 2.0");
 		//app.registerDispose(this);
 		checked_ports = new Vector<String>();
 		listeners = new Vector<RainbowduinoListener>();
