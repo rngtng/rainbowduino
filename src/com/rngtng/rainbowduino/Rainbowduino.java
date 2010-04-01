@@ -363,24 +363,30 @@ public class Rainbowduino implements RCodes {
 		this.master.sendMessage(RainbowduinoMessage.COMMAND, slaveNr, commandCode, data);
 	}	
 
-	private void sendMessage(int type, int receiverNr, int commandCode, int[] data) {		
-		send(type);
-		send(receiverNr); 		
-		send(commandCode);
-		send( ( data != null) ? data.length : 0 );
+	private void sendMessage(int type, int receiverNr, int commandCode, int[] data) {
+		try {
+			serialPort.write(type);
+			serialPort.write(receiverNr); 		
+			serialPort.write(commandCode);
+			serialPort.write(( data != null) ? data.length : 0 );
 
-		if( data != null )  {
-			for( int k = 0; k < data.length; k++ ) {
-				send(data[k]);
-			}
+			if( data != null )  {
+				for( int k = 0; k < data.length; k++ ) {
+					serialPort.write(data[k]);
+				}
+			}	
 		}
-		sleep(10); //TODO why this???
+		catch(RuntimeException e) {
+			RainbowduinoDetector.notifyError(this);
+			this.close();
+		}
+
 	}
 
 	private int receive(int commandCode) throws RainbowduinoError {
 		return receive(commandCode, -1);
 	}
-	
+
 	private int receive(int commandCode, int param) throws RainbowduinoError {		
 		//wait for response code
 		try {						
@@ -423,17 +429,6 @@ public class Rainbowduino implements RCodes {
 		return false;
 	}
 
-	private void send(int value) {
-		if(!isConnected()) return;
-		try {
-			serialPort.write(value);			
-		}
-		catch(RuntimeException e) {
-			RainbowduinoDetector.notifyError(this);
-			this.close();
-		}
-	}
-
 	private int waitForMessage() throws RainbowduinoTimeOut {
 		return waitForMessage(TIMEOUT);
 	}
@@ -455,7 +450,7 @@ public class Rainbowduino implements RCodes {
 			PApplet.println(" - registered");
 			Rainbowduino newRainbowduino = new Rainbowduino(this, _message.param());
 			//if( newRainbowduino.ping() ) 
-				RainbowduinoDetector.init(this.app).registerRainbowduino(newRainbowduino);
+			RainbowduinoDetector.init(this.app).registerRainbowduino(newRainbowduino);
 			return;
 		}
 		if( _message.receiver() != slaveNr) {
