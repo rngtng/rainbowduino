@@ -1,6 +1,5 @@
 package com.rngtng.rainbowduino;
 
-import processing.core.PApplet;
 
 
 public class RainbowduinoMessage implements RCodes {
