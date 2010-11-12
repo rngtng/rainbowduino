@@ -7,10 +7,10 @@ package com.rngtng.rainbowduino;
   PSerial Copyright (c) 2004-05 Ben Fry & Casey Reas
  */
 
+import gnu.io.SerialPortEvent;
+
 import java.io.IOException;
 
-import gnu.io.SerialPortEvent;
-import processing.core.PApplet;
 import processing.serial.Serial;
 
 /**

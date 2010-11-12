@@ -3,9 +3,9 @@
 	<classpathentry kind="src" path="resources/code"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="./lib/arduinoloader.jar"/>
 	<classpathentry kind="lib" path="/Applications/Processing.app/Contents/Resources/Java/core.jar"/>
-	<classpathentry kind="lib" path="/Applications/Processing.app/Contents/Resources/Java/modes/java/libraries/serial/library/RXTXcomm.jar"/>
-	<classpathentry kind="lib" path="/Applications/Processing.app/Contents/Resources/Java/modes/java/libraries/serial/library/serial.jar"/>
-	<classpathentry kind="lib" path="/Users/ted/Sites/java/libs/arduinoloader.jar"/>
+	<classpathentry kind="lib" path="/Applications/Processing.app/Contents/Resources/Java/libraries/serial/library/RXTXcomm.jar"/>
+	<classpathentry kind="lib" path="/Applications/Processing.app/Contents/Resources/Java/libraries/serial/library/serial.jar"/>
 	<classpathentry kind="output" path="resources/code"/>
 </classpath>
