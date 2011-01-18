@@ -17,17 +17,17 @@ void setup() {
   else {
     //try manually open port
     String p = Serial.list()[0];
-    int b = rainbowduino.UPLOAD_BAUD;  
-    
+    int b = rainbowduino.UPLOAD_BAUD;
+
     if( rainbowduino.uploadFirmware(p, b) ) {
       println("upload done");
-    }      
+    }
   }
-  
+
   noLoop();
 }
 
-void draw() { 
+void draw() {
 }
 
 
