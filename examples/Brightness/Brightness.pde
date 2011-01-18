@@ -1,38 +1,45 @@
 import processing.serial.*;
 import com.rngtng.rainbowduino.*;
 
-/*
- * Example sketch to test connected Rainbowduinos by fading brightness up and down
- *
- */
+Rainbowduino[] rainbowduinos = null;
+Rainbowduino rainbowduino_tmp = null;
 
-Vector rainbowduinos;
-int level   = 1;
-int level_f = 1; // 1 -> increase brightness, -1 => decrease brightness
-
-int[] WHITE = new int[]{255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255};
+int level  = 1;
+int f = 1;
+int rIndex;
+//byte colors[] = {1,16,3,4,5,6,7,8,10,12,14,16};
 
 
 void setup() {
-  rainbowduinos = new Vector(); //simple array to store all connected rainbowduinos
+  rainbowduinos = new Rainbowduino[10];
+  rIndex = 0;
   RainbowduinoDetector.start(this);
 }
 
+int li = 0;
+
 void draw() {
-   
-   for( int i = 0; i < rainbowduinos.size(); i++) {
-     Rainbowduino rainbowduino = (Rainbowduino) rainbowduinos.get(i);
-     rainbowduino.bufferSetAt(0, WHITE);  //Just send this on init!?
-     rainbowduino.brightnessSet(level);
+  level += f;
+
+   for( int l = 0; l < rIndex; l++) {
+    // if( l >= li ) {
+     rainbowduinos[l].bufferSetAt(0, new int[]{
+       255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255,255  }
+     );
+    //// li++;
+    // }
+     rainbowduinos[l].brightnessSet(level);
    }
-   
-   level += level_f;
-   if(level >= 16 || level < 1)  level_f *= -1; //invert
-   delay(100); 
+   if(level >= 15 || level < 1 )  f = -1 * f;
+   delay(100);
 }
 
 //callback funtion to register new rainbowduinos
 void rainbowduinoAvailable(Rainbowduino _rainbowduino) {
-  rainbowduinos.add(_rainbowduino);
+
+
+  rainbowduinos[rIndex] = _rainbowduino;
+  rIndex++;
   println("New Rainbowduino found: " + _rainbowduino.slaveNr  );
+
 }
