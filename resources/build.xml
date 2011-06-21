@@ -1,4 +1,4 @@
-<project name="ProcessingLibs" default="clean" basedir="../">
+<project name="rainbowduino" default="clean" basedir="../">
 
 <!--
     Properties for your project should be set and modified in the
