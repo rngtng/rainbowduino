@@ -21,12 +21,9 @@ Boston, MA  02111-1307  USA
 
 package com.rngtng.rainbowduino;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
 import processing.core.PApplet;
 
-import com.rngtng.arduinoloader.ArduinoLoader;
+// import com.rngtng.arduinoloader.ArduinoLoader;
 
 /**
  * 
@@ -102,53 +99,53 @@ public class Rainbowduino implements RCodes {
     }
 
     /**
-     * @return wheter rainbowudino is connected
+     * @return whether rainbowudino is connected
      */
     public boolean isConnected() {
         return (serialPort != null);
     }
 
     /**
-     * @return wheter rainbowudino is master (or slave)
+     * @return whether rainbowudino is master (or slave)
      */
     public boolean isMaster() {
         return (master == this);
     }
 
     /**
-     * @return boolean if successfull
+     * @return boolean if successful
      */
-    public boolean uploadFirmware() {
-        if (!isConnected())
-            return false;
-
-        this.serialPort.stop();
-        // TODO unload notifier???
-        if (uploadFirmware(this.getPortName(), this.UPLOAD_BAUDRATE)) {
-            sleep(3000);
-            this.openPort(this.getPortName());
-            return true;
-        }
-        return false;
-    }
+    // public boolean uploadFirmware() {
+    // if (!isConnected())
+    // return false;
+    //
+    // this.serialPort.stop();
+    // // TODO unload notifier???
+    // if (uploadFirmware(this.getPortName(), this.UPLOAD_BAUDRATE)) {
+    // sleep(3000);
+    // this.openPort(this.getPortName());
+    // return true;
+    // }
+    // return false;
+    // }
 
     /**
-     * @return boolean if successfull
+     * @return boolean if successful
      */
-    public boolean uploadFirmware(String portName, int baud) {
-        try {
-            ClassLoader cl = this.getClass().getClassLoader();
-            BufferedReader in = new BufferedReader(new InputStreamReader(
-                    cl.getResourceAsStream("firmware.hex")));
-
-            int imagesize = ArduinoLoader.upload(in, portName, baud, 128);
-            System.out.println("Completed, " + imagesize + " bytes uploaded");
-        } catch (Exception e) {
-            PApplet.println(e.getMessage());
-            return false;
-        }
-        return true;
-    }
+    // public boolean uploadFirmware(String portName, int baud) {
+    // try {
+    // ClassLoader cl = this.getClass().getClassLoader();
+    // BufferedReader in = new BufferedReader(new InputStreamReader(
+    // cl.getResourceAsStream("firmware.hex")));
+    //
+    // int imagesize = ArduinoLoader.upload(in, portName, baud, 128);
+    // System.out.println("Completed, " + imagesize + " bytes uploaded");
+    // } catch (Exception e) {
+    // PApplet.println(e.getMessage());
+    // return false;
+    // }
+    // return true;
+    // }
 
     /**
      * @return int version number of the api
