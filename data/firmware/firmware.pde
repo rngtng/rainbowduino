@@ -6,6 +6,7 @@
 
 #include <EEPROM.h> //only for Arduino IDE to include this during compile
 #include <Wire2.h> //only for Arduino IDE to include this during compile
+#include <SerialMessage.h>
 #include <TimerOne.h> //only for Arduino IDE to include this during compile
 
 #include <Rainbowduino.h>

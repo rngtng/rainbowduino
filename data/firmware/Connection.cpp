@@ -7,6 +7,7 @@
 
 #include <EEPROM.h>
 #include <Wire2.h>
+#include <SerialMessage.h>
 
 Connection Con;
 
@@ -25,10 +26,10 @@ void onReceiveMasterCallback(int howMany) {
     if(Con.slave_address_to_register == 0)  Con.slave_address_to_register = command;
   }
   else {   //forward data to serial
-    Serial.write(command);
+    SerialM.write(command);
     while(howMany > 1) {
       command = Wire.receive();
-      Serial.write(command);
+      SerialM.write(command);
       howMany--;
     }
   }
@@ -106,7 +107,7 @@ void Connection::begin(bool initWire) {
 void Connection::beginMaster(uint8_t master_address, bool initWire) {
   //6b. use master I2C address, start master mode, open serial
   i2c_address = master_address;
-  Serial.begin(BAUD_RATE);
+  SerialM.begin(BAUD_RATE);
 
   //7. start new I2C with given address
   if(initWire) {
@@ -175,8 +176,8 @@ void Connection::onMessageAvailable(conCallbackFunction newFunction) {
 
 void Connection::loop() {
   registerPendingSlave();
-  if(Serial.available()) {
-    uint8_t serialByte = Serial.read();
+  if(SerialM.available()) {
+    uint8_t serialByte = SerialM.read();
     inputMessage->consume(serialByte);
   }
   processMessage();
@@ -220,11 +221,11 @@ void Connection::sendError(uint8_t command, uint8_t param) {
 void Connection::send(uint8_t type, uint8_t command, uint8_t param) {
   if(master) {
 //    Serial.flush();
-      Serial.write(type);
-      Serial.write((byte) 0); //as we are master!
-      Serial.write(command);
-      Serial.write(1); //one more to follow
-      Serial.write(param);
+      SerialM.write(type);
+      SerialM.write((byte) 0); //as we are master!
+      SerialM.write(command);
+      SerialM.write(1); //one more to follow
+      SerialM.write(param);
   }
   else {
     Wire.beginTransmission(I2C_MASTER_ADR);
