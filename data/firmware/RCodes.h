@@ -10,7 +10,7 @@
 #define API_VERSION_NR 2
 
 /* command code */
-#define API_VERSION 253 //returns RESPONSE + Version number	
+#define API_VERSION 253 //returns RESPONSE + Version number
 #define PING        252 //returns RESPONSE + Version number
 
 /* Display Control */
@@ -32,17 +32,17 @@
 #define BUFFER_GET_AT 244 //param1: buffer addr, returns RESPONSE + buffer size
 //returns 2: buffer content
 
-#define BUFFER_LENGTH 242 //returns RESPONSE + buffer length
+#define BUFFER_NUM 242 //returns RESPONSE + buffer length
 
-#define BUFFER_SAVE 236 
+#define BUFFER_SAVE 236
 #define BUFFER_LOAD 234 //returns RESPONSE + buffer length
 
 /* Speed Control */
 #define SPEED_SET   228 //param1: SPEED value
 #define SPEED_GET   226 //returns RESPONSE + speed value
 
-#define SPEED_INC   224 
-#define SPEED_DEC   222 
+#define SPEED_INC   224
+#define SPEED_DEC   222
 
 #define ERROR_TIME_OUT 255 // followed by error code
 
