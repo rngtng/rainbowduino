@@ -1,3 +1,5 @@
+#include <WProgram.h>
+
 /* Com:
  * Abstraction of Serial / Wire commmunication
  * message :
@@ -7,7 +9,7 @@
  * 4. data length
  * 5. data
  */
- 
+
 #ifndef Connection_h
 #define Connection_h
 
@@ -30,25 +32,26 @@
 
 #define SLAVE_NEW 202 // param Slave nr
 
-#include <Wire.h>
-#include "WProgram.h"
+// #include <EEPROM.h>
+// #include <Wire2.h>
 //DEBUG    #include "Rainbowduino.h"
+
 #include "ConnectionMessage.h"
 
- extern "C" {
+extern "C" {
  // callback function
-     typedef void (*conCallbackFunction)(void);     
- }
+ typedef void (*conCallbackFunction)(void);
+}
 
 
 class Connection {
 public:
   bool master;
   uint8_t last_slave_address;
-  
+
   volatile uint8_t i2c_address;
   volatile uint8_t slave_address_to_register;
-  
+
   Connection();
   void loop();
   void begin(bool initWire = true);
@@ -57,22 +60,22 @@ public:
   void onMessageAvailable(conCallbackFunction newFunction);
   void processMessage();
   bool available();
-  
+
   void registerPendingSlave();
-  
+
   void sendResponse(uint8_t command, uint8_t param);
   void sendCommand(uint8_t command, uint8_t param);
   void sendError(uint8_t command, uint8_t param);
   void send(uint8_t type, uint8_t command, uint8_t param);
   void forwardMessage();
-  
-//private: 
+
+//private:
   conCallbackFunction onMessageAvailableCallback;
-  
-  ConnectionMessage* inputMessage; // Buffer that holds the data 
-  ConnectionMessage* outputMessage; // Buffer that holds the data 
-  ConnectionMessage buffer1; // Buffer that holds the data 
-  ConnectionMessage buffer2; // Buffer that holds the data  
+
+  ConnectionMessage* inputMessage; // Buffer that holds the data
+  ConnectionMessage* outputMessage; // Buffer that holds the data
+  ConnectionMessage buffer1; // Buffer that holds the data
+  ConnectionMessage buffer2; // Buffer that holds the data
 };
 
 extern Connection Con;

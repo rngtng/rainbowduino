@@ -4,15 +4,14 @@
 
 #include "Connection.h"
 #include "ConnectionMessage.h"
-#include "WProgram.h"
 
 #include <EEPROM.h>
-#include "Wire.h"
+#include <Wire2.h>
 
-Connection Con; 
+Connection Con;
 
 void onReceiveInitCallback(int howMany) {
-  uint8_t command = Wire.receive();  
+  uint8_t command = Wire.receive();
   if(command == I2C_CMD_OK) {  //Maybe TODO send explizit -I2C_CMD_SET_ADDRESS- command
     Con.i2c_address = Wire.receive();
   }
@@ -31,7 +30,7 @@ void onReceiveMasterCallback(int howMany) {
       command = Wire.receive();
       Serial.write(command);
       howMany--;
-    } 
+    }
   }
 }
 
@@ -43,14 +42,14 @@ void onReceiveSlaveCallback(int howMany) {
     Con.inputMessage->consume(serialByte);
     howMany--;
   }
-  //Rainbowduino.set_frame_line(0,7,0,serialByte,serialByte);  
+  //Rainbowduino.set_frame_line(0,7,0,serialByte,serialByte);
 }
 
 Connection::Connection() {
   //Init default values
   slave_address_to_register = 0;
   last_slave_address = I2C_SLAVE_ADR;
-  
+
   inputMessage = &buffer1;
   outputMessage = &buffer2;
 }
@@ -62,16 +61,16 @@ void Connection::begin(bool initWire) {
 //TODO: if we detect a working serial port, take master role in any case, notify all others to restart
 // -> http://stackoverflow.com/questions/195304/check-if-serial-port-is-listening
 
-  // 1. read last_adress from EEPROM and normalize to value between 0-16 
+  // 1. read last_adress from EEPROM and normalize to value between 0-16
   uint8_t old_i2c_address = EEPROM.read(I2C_EEPROM_ADR) & 0x0F;
 
-  // 2. startup delay 
+  // 2. startup delay
   if(old_i2c_address > I2C_MASTER_ADR) {
      int delay_time =  (old_i2c_address - I2C_MASTER_ADR) * STARTUP_DELAY_FACTOR;
      delay(delay_time);
   }
   // 3. open I2C connection with I2C_START_ADR as offset
-  i2c_address = old_i2c_address + I2C_START_ADR;  
+  i2c_address = old_i2c_address + I2C_START_ADR;
 
   if(initWire) {
     Wire.begin(i2c_address);
@@ -84,9 +83,9 @@ void Connection::begin(bool initWire) {
   Wire.onReceive(onReceiveInitCallback);
 
   //5. wait for response with new slave address
-  uint8_t c = I2C_WAIT_FOR_ADDRESS_RETRYS;  
+  uint8_t c = I2C_WAIT_FOR_ADDRESS_RETRYS;
   int delay_time2 =  max(1, old_i2c_address - I2C_MASTER_ADR) * I2C_WAIT_FOR_ADDRESS_TIMEOUT;
-  while(i2c_address >= I2C_START_ADR && c > 0) {  
+  while(i2c_address >= I2C_START_ADR && c > 0) {
     // 5a. make call to master with static number.
     Wire.beginTransmission(I2C_MASTER_ADR);
     Wire.send(I2C_CMD_HELLO); //TODO user proper Protocoll here???
@@ -94,7 +93,7 @@ void Connection::begin(bool initWire) {
     Wire.endTransmission();
     delay(delay_time2);
     c--;
-  }  
+  }
 
   if(i2c_address < I2C_START_ADR) {  //success
     beginSlave(i2c_address, false);
@@ -116,13 +115,13 @@ void Connection::beginMaster(uint8_t master_address, bool initWire) {
   else {
     TWAR = i2c_address << 1; // twi_setAddress
   }
-   
+
   Wire.onReceive(onReceiveMasterCallback);
   master = true;
 
   //8. save new adress to EEPROM
   EEPROM.write(I2C_EEPROM_ADR, i2c_address);
-  
+
   //9. broadcast to all slaves to reset and register
   for(int slave_adr = I2C_SLAVE_ADR; slave_adr < I2C_SLAVE_ADR + 32; slave_adr++) {
     Wire.beginTransmission(slave_adr); //BROADCAST
@@ -144,7 +143,7 @@ void Connection::beginSlave(uint8_t slave_address, bool initWire) {
   }
   else {
     TWAR = i2c_address << 1; // twi_setAddress
-  }  
+  }
   Wire.onReceive(onReceiveSlaveCallback);
   master = false;
 
@@ -163,7 +162,7 @@ void Connection::registerPendingSlave() {
 
   //notify serial about new slave
   sendCommand(SLAVE_NEW, last_slave_address);
-  
+
   //TODO: remember slave???
   slave_address_to_register = 0;
 }
@@ -174,14 +173,14 @@ void Connection::onMessageAvailable(conCallbackFunction newFunction) {
   onMessageAvailableCallback = newFunction;
 }
 
-void Connection::loop() {  
+void Connection::loop() {
   registerPendingSlave();
-  if(Serial.available()) { 
+  if(Serial.available()) {
     uint8_t serialByte = Serial.read();
     inputMessage->consume(serialByte);
   }
   processMessage();
-}  
+}
 
 
 void Connection::processMessage() {
@@ -190,7 +189,7 @@ void Connection::processMessage() {
   //1. swap buffers
   ConnectionMessage* tmpPointer = outputMessage;
   outputMessage = inputMessage;
-  
+
   //2. reset inputBuffer and read process
   inputMessage = tmpPointer;
   inputMessage->reset();

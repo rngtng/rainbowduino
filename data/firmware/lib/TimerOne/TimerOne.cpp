@@ -5,8 +5,8 @@
  *  Modified June 2009 by Michael Polli and Jesse Tane to fix a bug in setPeriod() which caused the timer to stop
  *
  *  This is free software. You can redistribute it and/or modify it under
- *  the terms of Creative Commons Attribution 3.0 United States License. 
- *  To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/us/ 
+ *  the terms of Creative Commons Attribution 3.0 United States License.
+ *  To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/us/
  *  or send a letter to Creative Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
  *
  */
@@ -22,7 +22,7 @@ ISR(TIMER1_OVF_vect)          // interrupt service routine that wraps a user def
 
 void TimerOne::initialize(long microseconds)
 {
-  TCCR1A = 0;                 // clear control register A 
+  TCCR1A = 0;                 // clear control register A
   TCCR1B = _BV(WGM13);        // set mode as phase and frequency correct pwm, stop the timer
   setPeriod(microseconds);
 }
@@ -85,7 +85,7 @@ void TimerOne::attachInterrupt(void (*isr)(), long microseconds)
 
 void TimerOne::detachInterrupt()
 {
-  TIMSK1 &= ~_BV(TOIE1);                                   // clears the timer overflow interrupt enable bit 
+  TIMSK1 &= ~_BV(TOIE1);                                   // clears the timer overflow interrupt enable bit
 }
 
 void TimerOne::start()

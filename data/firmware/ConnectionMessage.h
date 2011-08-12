@@ -1,3 +1,5 @@
+#include <WProgram.h>
+
 /* Com:
  * Abstraction of Serial / Wire commmunication
  * message :
@@ -7,7 +9,7 @@
  * 4. data length
  * 5. data
  */
- 
+
 #ifndef ConnectionMessage_h
 #define ConnectionMessage_h
 
@@ -25,14 +27,12 @@
 #define INDEX_COMMAND  2
 #define INDEX_LENGTH   3
 
-#include "WProgram.h"
-
 class ConnectionMessage {
  public:
    uint8_t data[MESSAGE_DATA_SIZE];
    uint8_t writeIndex;
    uint8_t readIndex;
-   
+
    ConnectionMessage();
    void consume( uint8_t dataByte );
    void reset();

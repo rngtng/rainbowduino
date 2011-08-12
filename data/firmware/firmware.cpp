@@ -1,13 +1,14 @@
+#include "WProgram.h"
 /*
  * Firmware.h version 2.1 - to run with Rainbowduino/Arduino Processing library
  * Copyright (c) 2011 Tobias Bielohlawek -> http://www.rngtng.com/mtxcontrol
  *
  */
 
-#include <EEPROM.h> //only for Arduino IDE to include this during compile
 #include <Wire2.h> //only for Arduino IDE to include this during compile
-#include <TimerOne.h> //only for Arduino IDE to include this during compile
+// #include <TimerOne.h> //only for Arduino IDE to include this during compile
 
+#include <EEPROM.h>
 #include <Rainbowduino.h>
 // #include <MsTimer2.h>
 
@@ -208,4 +209,20 @@ void loop() {
 
   //  Rainbowduino.set_frame_line(0,5,0,Con.inputMessage->writeIndex, Con.inputMessage->param());
   //  Rainbowduino.set_frame_line(0,6,0,0, Con.outputMessage->param());
+}
+
+
+extern "C" void __cxa_pure_virtual() { while (1) ; }
+#include <WProgram.h>
+
+int main(void)
+{
+	init();
+
+	setup();
+
+	for (;;)
+		loop();
+
+	return 0;
 }
