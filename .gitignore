@@ -4,6 +4,4 @@ distribution
 reference
 tmp
 resources/code
-firmware/applet
-i2c_slave/applet
-i2c_master/applet
+firmware/rainbow/applet
