@@ -1,3 +1,3 @@
-[submodule "firmware/rainbow"]
-	path = firmware/rainbow
+[submodule "data/rainbow"]
+	path = data/rainbow
 	url = git://github.com/rngtng/rainbow.ino.git

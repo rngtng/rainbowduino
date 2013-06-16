@@ -19,7 +19,7 @@ This library provides an interface to control {Seeedstudios Rainbowduino}[http:/
 
 == Installation
 
-Download, unzip and put the extracted rainbowudino folder into the libraries folder of your processing sketches. Reference and examples are included in the folder as well. Open the firmware/rainbow/rainbow.ino file with the Arduino IDE and upload it to your Rainbowduino.
+Download, unzip and put the extracted rainbowudino folder into the libraries folder of your processing sketches. Reference and examples are included in the folder as well. Open the data/rainbow/rainbow.ino file with the Arduino IDE and upload it to your Rainbowduino.
 
 
 == Usage
