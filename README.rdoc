@@ -19,7 +19,7 @@ This library provides an interface to control {Seeedstudios Rainbowduino}[http:/
 
 == Installation
 
-Download, unzip and put the extracted rainbowudino folder into the libraries folder of your processing sketches. Reference and examples are included in the folder as well. Open the firmware/firmware.pde file with the Arduino IDE and upload it to your Rainbowduino.
+Download, unzip and put the extracted rainbowudino folder into the libraries folder of your processing sketches. Reference and examples are included in the folder as well. Open the firmware/rainbow/rainbow.ino file with the Arduino IDE and upload it to your Rainbowduino.
 
 
 == Usage
@@ -28,14 +28,14 @@ Basically, create an instance of the Rainbowduino class and init the Serialport 
 
   import processing.serial.*;
   import com.rngtng.rainbowduino.*;
-  
+
   Rainbowduino device;
-  
+
   void setup() {
     device = new Rainbowduino(this);
     device.initPort();
   }
-  
+
   void draw() {
     //send green frame
     device.bufferSetAt(0, new int[]{255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0,255,0,0});
@@ -46,7 +46,7 @@ Basically, create an instance of the Rainbowduino class and init the Serialport 
 
 For more details, see the examples.
 
-== Near future plans
+== Future plans
  * extend API, set ROW and set Pixel
  * better color abstraction (CONST instead of numbers)
  * support 12bit color
@@ -55,6 +55,10 @@ For more details, see the examples.
  * add test (how to do this with processing??)
 
 == Changelog
+
+=== v0.3.0
+* extract firmware to separate repository
+* update to Processign 2.0
 
 === v0.1.0
 
@@ -65,7 +69,7 @@ For more details, see the examples.
 == Copyright
 The MIT License
 
-Copyright © 2009 RngTng, Tobias Bielohlawek
+Copyright © 2013 RngTng, Tobias Bielohlawek
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
