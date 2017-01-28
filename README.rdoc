@@ -46,6 +46,18 @@ Basically, create an instance of the Rainbowduino class and init the Serialport 
 
 For more details, see the examples.
 
+== Development
+
+Install `ant`:
+
+`brew install ant`
+
+Execute build.xml:
+
+`ant -f resources/build.xml`
+
+
+
 == Future plans
  * extend API, set ROW and set Pixel
  * better color abstraction (CONST instead of numbers)
