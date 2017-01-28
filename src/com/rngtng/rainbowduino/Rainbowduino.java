@@ -51,7 +51,7 @@ public class Rainbowduino  implements RCodes{
 	 */
 	public Rainbowduino(PApplet _app) {
 		this.app = _app;
-		app.registerDispose(this);
+		app.registerMethod("dispose", this);
 	}
 
 	public void dispose() {
@@ -444,7 +444,10 @@ public class Rainbowduino  implements RCodes{
 		}
 	}
 
+	@SuppressWarnings("serial")
 	class RainbowduinoTimeOut extends Exception {}
+
+	@SuppressWarnings("serial")
 	class RainbowduinoError extends Exception {
 		int error;
 
